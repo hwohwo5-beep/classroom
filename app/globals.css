@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  /* Toss Design System Palette */
+  --bg: #ffffff;
+  --bg-alt: #f9fafb;
+  --surface: #f2f4f6;
+  --surface-2: #e8f3ff;
+
+  --text: #191f28;
+  --text-secondary: #333d4b;
+  --text-muted: #6b7684;
+  --text-dim: #8b95a1;
+
+  --border: #e5e8eb;
+  --border-strong: #d1d6db;
+
+  --accent: #3182f6;
+  --accent-hover: #1b64da;
+  --accent-deep: #1e40af;
+  --accent-soft: #e8f3ff;
+
+  --success: #00c896;
+  --warning: #ff9500;
+  --danger: #f04452;
+  --info: #3182f6;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: "Pretendard", "SF Mono", "Fira Code", "Fira Mono", monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
