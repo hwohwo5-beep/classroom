@@ -270,7 +270,7 @@ export default function RoomPage() {
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">
             <span>🟢</span>
-            <span>지금 {onlineCount}명 접속 중 · 총 40석</span>
+            <span>🟢 40석 중 {onlineCount}명 착석</span>
           </div>
         </div>
 
