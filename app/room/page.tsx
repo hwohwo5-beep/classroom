@@ -438,6 +438,12 @@ export default function RoomPage() {
             🎬 미니 브이로그
           </button>
           <button
+            onClick={() => router.push("/roomshot")}
+            className="w-full h-12 rounded-lg bg-[#f2f4f6] text-[#191f28] font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
+          >
+            📸 룸샷 - 우리 반이 기억하는 나
+          </button>
+          <button
             onClick={() => router.push("/create")}
             className="w-full h-12 rounded-lg bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
           >
