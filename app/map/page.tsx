@@ -238,9 +238,9 @@ export default function MapPage() {
 
   return (
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
-      <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col relative">
-        {/* 상단 검색바 */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-4 pt-4">
+      <div className="w-full max-w-[420px] h-dvh bg-white relative overflow-hidden">
+        {/* 상단 검색바 (지도 위 오버레이) */}
+        <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-4">
           <div className="relative">
             <div className="flex items-center gap-2 h-[52px] px-4 bg-white rounded-xl border border-[#e5e8eb] shadow-[0_2px_8px_rgba(25,31,40,0.08)]">
               <span className="text-[#8b95a1] text-base shrink-0">🔍</span>
@@ -287,8 +287,8 @@ export default function MapPage() {
           </div>
         </div>
 
-        {/* 지도 영역 */}
-        <div ref={mapRef} className="flex-1 w-full relative">
+        {/* 지도 영역 (전체 화면 배경) */}
+        <div ref={mapRef} className="absolute inset-0 w-full h-full z-[1]">
           {!mapReady && !mapError && (
             <div className="absolute inset-0 bg-[#f2f4f6] flex items-center justify-center z-0">
               <p className="text-[#8b95a1] text-sm">🗺️ 지도를 불러오는 중...</p>
@@ -303,30 +303,21 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* 하단 바텀시트 */}
-        <div className="bg-white rounded-t-2xl shadow-[0_-8px_24px_rgba(25,31,40,0.08)] px-6 pt-5 pb-8">
+        {/* 하단 바텀시트 (지도 위 오버레이, 학교 선택 시에만 표시) */}
+        {selectedSchool && (
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-white rounded-t-2xl shadow-[0_-8px_24px_rgba(25,31,40,0.08)] px-6 pt-5 pb-8">
           <div className="w-10 h-1 bg-[#e5e8eb] rounded-full mx-auto mb-4" />
-          {selectedSchool ? (
-            <>
-              <p className="text-xs text-[#8b95a1]">선택한 학교</p>
-              <h2 className="text-xl font-bold text-[#191f28] mt-1">{selectedSchool.schoolName}</h2>
-              <p className="text-sm text-[#6b7684] mt-0.5">{selectedSchool.address}</p>
-              <button
-                onClick={handleCreateRoom}
-                className="w-full h-[52px] rounded-[7px] bg-[#3182f6] text-white font-medium text-base mt-5 active:scale-[0.98] transition-transform duration-96"
-              >
-                이 학교로 방 만들기
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="text-xs text-[#6b7684]">학교를 선택해주세요</p>
-              <p className="text-sm text-[#8b95a1] mt-1">
-                🔍 검색창에 학교 이름을 입력하고 결과에서 선택하세요
-              </p>
-            </>
-          )}
+          <p className="text-xs text-[#8b95a1]">선택한 학교</p>
+          <h2 className="text-xl font-bold text-[#191f28] mt-1">{selectedSchool.schoolName}</h2>
+          <p className="text-sm text-[#6b7684] mt-0.5">{selectedSchool.address}</p>
+          <button
+            onClick={handleCreateRoom}
+            className="w-full h-[52px] rounded-[7px] bg-[#3182f6] text-white font-medium text-base mt-5 active:scale-[0.98] transition-transform duration-96"
+          >
+            이 학교로 방 만들기
+          </button>
         </div>
+        )}
       </div>
     </main>
   );

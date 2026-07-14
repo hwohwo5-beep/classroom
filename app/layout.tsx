@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "클래스룸 - 우리 반이 다시 모이는 곳",
+  title: "교실 - 우리 반이 다시 모이는 곳",
   description: "동창회 소셜 웹앱 - 학교 지도, 방, 콘텐츠 공유",
 };
 

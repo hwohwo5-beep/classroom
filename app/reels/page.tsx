@@ -403,26 +403,34 @@ export default function ReelsPage() {
                       key={member.uid}
                       className="relative aspect-[9/16] rounded-xl overflow-hidden bg-[#f2f4f6]"
                     >
-                      {videoUrl ? (
-                        <video
-                          src={videoUrl}
-                          muted
-                          playsInline
-                          loop
-                          className="absolute inset-0 w-full h-full object-cover"
-                          onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
-                          onMouseLeave={(e) => {
-                            const v = e.target as HTMLVideoElement;
-                            v.pause();
-                            v.currentTime = 0;
-                          }}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8b95a1]">
-                          <span className="text-2xl">{member.emoji}</span>
-                          <span className="text-[10px] mt-1">{member.name}</span>
-                        </div>
-                      )}
+                       {videoUrl ? (
+                         <video
+                           src={videoUrl}
+                           muted
+                           playsInline
+                           loop
+                           className="absolute inset-0 w-full h-full object-cover"
+                           onMouseEnter={(e) => {
+                             const v = e.target as HTMLVideoElement;
+                             const playPromise = v.play();
+                             if (playPromise !== undefined) {
+                               playPromise.catch(() => {
+                                 // Ignore errors (e.g., AbortError when interrupted by pause)
+                               });
+                             }
+                           }}
+                           onMouseLeave={(e) => {
+                             const v = e.target as HTMLVideoElement;
+                             v.pause();
+                             v.currentTime = 0;
+                           }}
+                         />
+                       ) : (
+                         <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8b95a1]">
+                           <span className="text-2xl">{member.emoji}</span>
+                           <span className="text-[10px] mt-1">{member.name}</span>
+                         </div>
+                       )}
                       {/* 멤버 이름 오버레이 */}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
                         <p className="text-[10px] font-medium text-white/90 truncate">

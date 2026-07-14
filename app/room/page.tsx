@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
 import {
   collection,
   addDoc,
@@ -93,10 +93,10 @@ const emotionName: Record<NonNullable<Emotion>, string> = {
   notalk: "말 걸지 마요 🙅",
 };
 
-const ROOM_ID = "default-room"; // TODO: 실제 roomId로 교체
-
-export default function RoomPage() {
+function RoomPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roomId = searchParams.get("roomId") || "default-room"; // URL 쿼리에서 roomId 가져오기
   const { user, loading } = useAuthContext();
   const [seats] = useState<Seat[]>(buildSeats);
   const [mounted, setMounted] = useState(false);
@@ -226,7 +226,7 @@ export default function RoomPage() {
     setUploading(true);
     try {
       const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `rooms/${ROOM_ID}/album/${fileName}`);
+      const storageRef = ref(storage, `rooms/${roomId}/album/${fileName}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadUrl = await getDownloadURL(snapshot.ref);
 
@@ -269,7 +269,6 @@ export default function RoomPage() {
           <h1 className="text-xl font-bold text-[#191f28]">3학년 5반</h1>
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">
-            <span>🟢</span>
             <span>🟢 40석 중 {onlineCount}명 착석</span>
           </div>
         </div>
@@ -432,7 +431,7 @@ export default function RoomPage() {
             </div>
           )}
           <button
-            onClick={() => router.push("/reels")}
+            onClick={() => router.push(`/reels?roomId=${roomId}`)}
             className="w-full h-12 rounded-lg bg-[#f04452] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
           >
             🎬 미니 브이로그
@@ -533,5 +532,20 @@ export default function RoomPage() {
         </div>
       )}
     </main>
+  );
+}
+
+// useSearchParams는 Suspense 경계가 필요하므로 래핑
+export default function RoomPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#f9fafb] flex justify-center">
+        <div className="w-full max-w-[420px] min-h-screen bg-white flex items-center justify-center">
+          <p className="text-[#8b95a1] text-sm">불러오는 중...</p>
+        </div>
+      </main>
+    }>
+      <RoomPageInner />
+    </Suspense>
   );
 }

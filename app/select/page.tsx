@@ -2,6 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuthContext } from "@/context/AuthContext";
 import type { SchoolResult } from "@/app/api/school/route";
 
 // TODO: [S3] 학교/학년/반 선택 페이지
@@ -13,6 +16,7 @@ import type { SchoolResult } from "@/app/api/school/route";
 function SelectPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuthContext();
 
   const grades = [1, 2, 3];
   const classes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -27,6 +31,8 @@ function SelectPageInner() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // 학교 검색 상태
   const [schoolNameInput, setSchoolNameInput] = useState("");
@@ -254,16 +260,53 @@ function SelectPageInner() {
         </div>
 
         {/* 하단 버튼 */}
+        {saveError && (
+          <p className="text-xs text-[#f04452] text-center mb-2">{saveError}</p>
+        )}
         <button
-          onClick={() => canEnter && router.push("/room")}
-          disabled={!canEnter}
+          onClick={async () => {
+            if (!canEnter || !selectedSchool) return;
+            const schoolCode = searchParams.get("schoolCode") || selectedSchool.schoolCode;
+            if (!schoolCode) {
+              setSaveError("학교 정보가 없습니다. 학교를 다시 선택해주세요.");
+              return;
+            }
+            setSaveError(null);
+            setSaving(true);
+            try {
+              const roomId = `${schoolCode}_${selectedYear}_${selectedGrade}_${selectedClass}`;
+              const schoolName = searchParams.get("schoolName")
+                ? decodeURIComponent(searchParams.get("schoolName")!)
+                : selectedSchool.schoolName;
+
+              // Firestore에 내 반 정보 저장 (merge: true → 재입장 시 lastVisited만 갱신)
+              if (user) {
+                await setDoc(doc(db, "users", user.uid, "myClasses", roomId), {
+                  roomId,
+                  schoolName,
+                  schoolCode,
+                  year: selectedYear,
+                  grade: selectedGrade,
+                  classNo: selectedClass,
+                  lastVisited: serverTimestamp(),
+                }, { merge: true });
+              }
+
+              router.push(`/room?roomId=${roomId}`);
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : "저장에 실패했습니다.";
+              setSaveError(msg);
+              setSaving(false);
+            }
+          }}
+          disabled={!canEnter || saving}
           className={`w-full h-14 rounded-[7px] font-medium text-base mt-auto transition-all active:scale-[0.98] duration-96 ${
-            canEnter
+            canEnter && !saving
               ? "bg-[#3182f6] text-white"
               : "bg-[#f2f4f6] text-[#8b95a1] cursor-not-allowed"
           }`}
         >
-          우리 반 들어가기
+          {saving ? "저장 중..." : "우리 반 들어가기"}
         </button>
       </div>
     </main>
