@@ -97,7 +97,7 @@ function RoomPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roomId = searchParams.get("roomId") || "default-room"; // URL 쿼리에서 roomId 가져오기
-  const { user, loading } = useAuthContext();
+  const { user, loading, signInWithGoogle } = useAuthContext();
   const [seats] = useState<Seat[]>(buildSeats);
   const [mounted, setMounted] = useState(false);
   const [showEmotionPicker, setShowEmotionPicker] = useState(false);
@@ -146,19 +146,15 @@ function RoomPageInner() {
     }
   };
 
-  // 로그인 안 됐으면 /login 으로 리다이렉트
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/login");
-    }
-  }, [user, loading, router]);
-
+  // 로그인 가드: 미로그인 시 /login 으로 리다이렉트하지 않고,
+  // 이 페이지 안에서 로그인 유도 → 로그인 성공 시 같은 roomId로 자동 복귀
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Firestore 실시간 구독 (방명록)
+  // Firestore 실시간 구독 (방명록) - 로그인된 사용자만 구독
   useEffect(() => {
+    if (!user) return;
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, orderBy("createdAt", "asc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -175,10 +171,11 @@ function RoomPageInner() {
       setMessages(msgs);
     });
     return unsubscribe;
-  }, []);
+  }, [user]);
 
-  // Firestore 실시간 구독 (앨범)
+  // Firestore 실시간 구독 (앨범) - 로그인된 사용자만 구독
   useEffect(() => {
+    if (!user) return;
     const albumRef = collection(db, "album");
     const q = query(albumRef, orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -195,7 +192,7 @@ function RoomPageInner() {
       setPhotos(list);
     });
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   // 새 메시지 추가 시 스크롤
   useEffect(() => {
@@ -277,15 +274,55 @@ function RoomPageInner() {
     }
   };
 
-  // 로딩 중이거나 로그인 안 됐으면 빈 화면 (리다이렉트 전)
-  if (!mounted || loading || !user) {
+  // ===== 로그인 가드: 로딩 / 미로그인 / 로그인됨 분기 =====
+
+  // 1. 아직 마운트 안 됐거나 auth 로딩 중
+  if (!mounted || loading) {
     return (
       <main className="min-h-screen bg-[#f9fafb] flex justify-center">
-        <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col relative" />
+        <div className="w-full max-w-[420px] min-h-screen bg-white flex items-center justify-center">
+          <p className="text-[#8b95a1] text-sm">불러오는 중...</p>
+        </div>
       </main>
     );
   }
 
+  // 2. 미로그인 → 로그인 유도 화면 (roomId 유지 → 로그인 후 자동 복귀)
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[#f9fafb] flex justify-center">
+        <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col items-center justify-center px-8 text-center">
+          <div className="text-5xl mb-5">🏫</div>
+          <h1 className="text-xl font-bold text-[#191f28] mb-2">
+            친구가 초대한 우리 반이에요!
+          </h1>
+          <p className="text-sm text-[#6b7684] mb-8 leading-relaxed">
+            로그인하고 들어오세요 👋
+          </p>
+          <button
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+                // 로그인 성공 시 user가 채워지면서
+                // 같은 URL(roomId 유지)로 방 화면이 자동 렌더됨
+              } catch (err) {
+                console.error("Google sign-in failed:", err);
+                alert("로그인에 실패했어요. 다시 시도해 주세요.");
+              }
+            }}
+            className="w-full max-w-[280px] h-12 rounded-lg bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
+          >
+            구글로 시작하기
+          </button>
+          <p className="text-[11px] text-[#8b95a1] mt-4">
+            로그인하면 우리 반 친구들을 만날 수 있어요
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // 3. 로그인됨 → 기존 방 화면 전체
   return (
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
       <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col relative">
