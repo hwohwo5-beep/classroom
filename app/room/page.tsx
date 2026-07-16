@@ -113,6 +113,39 @@ function RoomPageInner() {
   const [selectedPhoto, setSelectedPhoto] = useState<AlbumPhoto | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 초대 링크
+  const [inviteUrl, setInviteUrl] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setInviteUrl(`${window.location.origin}/room?roomId=${roomId}`);
+    }
+  }, [roomId]);
+
+  const handleInvite = async () => {
+    const url = inviteUrl || `${window.location.origin}/room?roomId=${roomId}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "반클 - 다시 만나는 우리 반",
+          text: "우리 반 다시 모이는 중! 너도 들어와 👋",
+          url,
+        });
+      } catch {
+        // 사용자가 공유를 취소했거나 에러 발생 - 무시
+      }
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("초대 링크가 복사됐어요! 카톡에 붙여넣기 하세요 📋");
+      } catch {
+        alert(`초대 링크:\n${url}`);
+      }
+    } else {
+      // clipboard도 없는 구형 환경
+      prompt("초대 링크를 복사하세요 (Ctrl+C):", url);
+    }
+  };
+
   // 로그인 안 됐으면 /login 으로 리다이렉트
   useEffect(() => {
     if (!loading && !user) {
@@ -270,6 +303,38 @@ function RoomPageInner() {
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">
             <span>🟢 40석 중 {onlineCount}명 착석</span>
+          </div>
+
+          {/* 친구 초대하기 */}
+          <div className="mt-3 space-y-2">
+            <button
+              onClick={handleInvite}
+              className="w-full h-10 rounded-[7px] bg-[#f2f4f6] text-[#191f28] text-sm font-medium active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+            >
+              <span>📨</span> 친구 초대하기
+            </button>
+            {inviteUrl && (
+              <div className="flex items-center gap-2">
+                <input
+                  readOnly
+                  value={inviteUrl}
+                  className="flex-1 h-8 px-2.5 rounded-[7px] bg-[#f9fafb] text-[11px] text-[#6b7684] border border-[#e5e8eb] outline-none select-all"
+                  onFocus={(e) => e.target.select()}
+                />
+                <button
+                  onClick={() => {
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(inviteUrl).then(() => {
+                        alert("초대 링크가 복사됐어요! 📋");
+                      }).catch(() => {});
+                    }
+                  }}
+                  className="h-8 px-3 rounded-[7px] bg-[#3182f6] text-white text-[11px] font-medium active:scale-[0.98] transition-transform shrink-0"
+                >
+                  복사
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
