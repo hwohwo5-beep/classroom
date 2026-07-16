@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import {
   collection,
   addDoc,
@@ -40,8 +40,6 @@ interface ReelDoc {
   memberId: string;
   createdAt: Timestamp | null;
 }
-
-const ROOM_ID = "default-room"; // TODO: 실제 roomId로 교체
 
 const TIME_SLOTS = ["등교", "점심", "하교"] as const;
 type TimeSlot = (typeof TIME_SLOTS)[number];
@@ -89,8 +87,10 @@ const MEMBERS: Member[] = [
   { uid: "user40", name: "박형식", emoji: "🦉", online: true },
 ];
 
-export default function ReelsPage() {
+function ReelsPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roomId = searchParams.get("roomId") || "default-room";
   const { user, loading: authLoading } = useAuthContext();
 
   const [mounted, setMounted] = useState(false);
@@ -130,7 +130,7 @@ export default function ReelsPage() {
   useEffect(() => {
     if (!mounted) return;
 
-    const reelsRef = collection(db, "rooms", ROOM_ID, "reels");
+    const reelsRef = collection(db, "rooms", roomId, "reels");
     const q = query(
       reelsRef,
       where("timeSlot", "==", timeSlot),
@@ -152,7 +152,7 @@ export default function ReelsPage() {
       setReelDocs(docs);
     });
     return unsubscribe;
-  }, [mounted, timeSlot]);
+  }, [mounted, timeSlot, roomId]);
 
   // cleanup blob URL on unmount
   useEffect(() => {
@@ -247,14 +247,14 @@ export default function ReelsPage() {
 
       // Storage 경로: rooms/{roomId}/reels/{timeSlot}/{uid}_{timestamp}.webm
       const fileName = `${user.uid}_${Date.now()}.webm`;
-      const storageRef = ref(storage, `rooms/${ROOM_ID}/reels/${timeSlot}/${fileName}`);
+      const storageRef = ref(storage, `rooms/${roomId}/reels/${timeSlot}/${fileName}`);
       const snapshot = await uploadBytes(storageRef, recordedBlob);
       const downloadUrl = await getDownloadURL(snapshot.ref);
 
       // Firestore: rooms/{roomId}/reels 컬렉션
       // 같은 uid+timeSlot이면 덮어쓰기 (setDoc with doc id = uid_timeSlot)
       const docId = `${user.uid}_${timeSlot}`;
-      const docRef = doc(db, "rooms", ROOM_ID, "reels", docId);
+      const docRef = doc(db, "rooms", roomId, "reels", docId);
       await setDoc(docRef, {
         uid: user.uid,
         timeSlot,
@@ -278,7 +278,7 @@ export default function ReelsPage() {
     } finally {
       setUploading(false);
     }
-  }, [recordedBlob, user, recordingMemberId, timeSlot, recordedBlobUrl, stopCamera]);
+  }, [recordedBlob, user, recordingMemberId, timeSlot, recordedBlobUrl, stopCamera, roomId]);
 
   // ── 녹화 모달 닫기 ──
   const closeRecordModal = useCallback(() => {
@@ -605,5 +605,17 @@ export default function ReelsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ReelsPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#f9fafb] flex justify-center">
+        <div className="w-full max-w-[480px] min-h-screen bg-white flex flex-col relative" />
+      </main>
+    }>
+      <ReelsPageInner />
+    </Suspense>
   );
 }
