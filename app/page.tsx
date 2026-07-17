@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
+import Header from "@/app/components/Header";
 
 // TODO: [S0] 메인 랜딩(로비) 페이지
 // - 로그인 상태에 따라 3단계 분기 (loading / 미로그인 / 로그인)
@@ -22,25 +23,11 @@ interface MyClass {
 
 export default function RootPage() {
   const router = useRouter();
-  const { user, loading: authLoading, signInWithGoogle, signOut } = useAuthContext();
+  const { user, loading: authLoading, signInWithGoogle } = useAuthContext();
 
   const [myClasses, setMyClasses] = useState<MyClass[]>([]);
   const [classesLoading, setClassesLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // ─── 메뉴 바깥 클릭 시 닫기 ───
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
 
   // ─── 로그인된 사용자의 myClasses 조회 ───
   useEffect(() => {
@@ -149,182 +136,84 @@ export default function RootPage() {
     );
   }
 
-   // ── 2단계: 미로그인 ──
-   if (!user) {
-     return (
-       <main className="min-h-screen bg-[#f9fafb]">
-         <div className="flex flex-col lg:flex-row h-full w-full items-center justify-center">
-           {/* Left: brand area (only on lg and up) */}
-           <div className="hidden lg:flex flex-1 lg:flex-1 flex-col items-center justify-center bg-gradient-to-br from-[#f04452] to-[#ff6b7a] text-white px-8">
-             <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6">
-               <span className="text-3xl font-bold text-white">클</span>
-             </div>
-             <h1 className="text-3xl font-bold text-white mb-4">교실</h1>
-             <p className="text-lg text-white/90 text-center mb-8">
-               우리 반이 콘텐츠가 되는 곳
-             </p>
-             <div className="space-y-4 text-center text-white/80">
-               <div className="flex items-center justify-center gap-3">
-                 <span className="text-2xl">🎬</span>
-                 <div className="text-left">
-                   <p className="font-medium">3초 릴스</p>
-                   <p className="text-sm">하루 3초, 우리 반 기록</p>
-                 </div>
-               </div>
-               <div className="flex items-center justify-center gap-3">
-                 <span className="text-2xl">⏳</span>
-                 <div className="text-left">
-                   <p className="font-medium">N년 후 재회</p>
-                   <p className="text-sm">시간이 지나면 다시 만나요</p>
-                 </div>
-               </div>
-               <div className="flex items-center justify-center gap-3">
-                 <span className="text-2xl">📱</span>
-                 <div className="text-left">
-                   <p className="font-medium">그리드 공유</p>
-                   <p className="text-sm">인스타로 반 전체 한 번에</p>
-                 </div>
-               </div>
-             </div>
-           </div>
-           {/* Right: login card */}
-           <div className="flex-1 lg:flex-1 flex-col items-center justify-center bg-white w-full max-w-[420px] px-8">
-             <div className="w-full max-w-[420px]">
-               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#f04452] to-[#ff6b7a] flex items-center justify-center mb-6 shadow-lg shadow-[#f04452]/20">
-                 <span className="text-3xl font-bold text-white">클</span>
-               </div>
-               <h1 className="text-2xl font-bold text-[#191f28]">교실</h1>
-               <p className="text-sm text-[#6b7684] mt-2 text-center">
-                 우리 반이 콘텐츠가 되는 곳
-               </p>
+  // ── 2단계: 미로그인 ──
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[#f9fafb]">
+        <div className="flex flex-col md:flex-row min-h-screen w-full">
+          {/* Left: brand area (md 이상에서만 표시) — "반클" 1개만 */}
+          <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-gradient-to-br from-[#f04452] to-[#ff6b7a] text-white px-8">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6">
+              <span className="text-3xl font-bold text-white">반클</span>
+            </div>
+            <p className="text-lg text-white/90 text-center">
+              다시 만나는 우리 반
+            </p>
+          </div>
 
-               {/* 구글 로그인 버튼 */}
-               <button
-                 onClick={handleGoogleSignIn}
-                 className="mt-10 w-full h-[52px] rounded-[7px] bg-[#191f28] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96"
-               >
-                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                   <path
-                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                     fill="#4285F4"
-                   />
-                   <path
-                     d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                     fill="#34A853"
-                   />
-                   <path
-                     d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                     fill="#FBBC05"
-                   />
-                   <path
-                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                     fill="#EA4335"
-                   />
-                 </svg>
-                 구글로 시작하기
-               </button>
+          {/* Right: login card */}
+          <div className="flex-1 flex items-center justify-center bg-white px-8">
+            <div className="w-full max-w-[420px] flex flex-col items-center">
+              {/* 모바일에서만 보이는 로고 (md 이상에서는 왼쪽 브랜드 영역에 있음) */}
+              <div className="md:hidden w-20 h-20 rounded-2xl bg-gradient-to-br from-[#f04452] to-[#ff6b7a] flex items-center justify-center mb-6 shadow-lg shadow-[#f04452]/20">
+                <span className="text-3xl font-bold text-white">반클</span>
+              </div>
+              <h1 className="md:hidden text-2xl font-bold text-[#191f28]">반클</h1>
+              <p className="md:hidden text-sm text-[#6b7684] mt-2 text-center">
+                다시 만나는 우리 반
+              </p>
 
-               {loginError && (
-                 <p className="mt-3 text-xs text-[#f04452] text-center">{loginError}</p>
-               )}
+              {/* 구글 로그인 버튼 */}
+              <button
+                onClick={handleGoogleSignIn}
+                className="mt-10 w-full h-[52px] rounded-[7px] bg-[#191f28] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                    fill="#4285F4"
+                  />
+                  <path
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#34A853"
+                  />
+                  <path
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    fill="#EA4335"
+                  />
+                </svg>
+                구글로 시작하기
+              </button>
 
-               {/* 하단 안내 */}
-               <p className="mt-8 text-xs text-[#8b95a1] text-center">
-                 로그인하면 우리 반 친구들과
-                 <br />
-                 3초 릴스로 추억을 남길 수 있어요
-               </p>
-             </div>
-           </div>
-         </div>
-       </main>
-     );
-   }
+              {loginError && (
+                <p className="mt-3 text-xs text-[#f04452] text-center">{loginError}</p>
+              )}
+
+              {/* 하단 안내 */}
+              <p className="mt-8 text-xs text-[#8b95a1] text-center">
+                로그인하고 흩어진 우리 반을 다시 모아보세요 👋
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   // ── 3단계: 로그인됨 → 로비 ──
   return (
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
       <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col">
-        {/* 헤더 */}
-        <div className="px-5 pt-12 pb-4 border-b border-[#e5e8eb]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f04452] to-[#ff6b7a] flex items-center justify-center">
-                <span className="text-sm font-bold text-white">클</span>
-              </div>
-              <h1 className="text-lg font-bold text-[#191f28]">교실</h1>
-            </div>
-            {/* 우측: 프로필 아이콘 + 드롭다운 메뉴 */}
-            <div className="relative shrink-0" ref={menuRef}>
-              <button
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="w-8 h-8 rounded-full overflow-hidden border border-[#e5e8eb] active:scale-95 transition-transform duration-96"
-              >
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.nickname ?? ""}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="w-full h-full flex items-center justify-center text-sm font-medium text-[#6b7684] bg-[#f2f4f6]">
-                    {user?.nickname?.charAt(0) ?? "?"}
-                  </span>
-                )}
-              </button>
+        {/* 공통 헤더 (프로필 메뉴 포함) */}
+        <Header />
 
-              {/* 드롭다운 메뉴 */}
-              {menuOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] w-[180px] bg-white rounded-xl shadow-lg border border-[#f2f4f6] py-1 z-50">
-                  {/* 내 정보 */}
-                  <div className="px-4 py-3 border-b border-[#f2f4f6]">
-                    <p className="text-xs text-[#8b95a1]">내 정보</p>
-                    <p className="text-sm font-medium text-[#191f28] mt-0.5 truncate">
-                      {user?.nickname ?? "사용자"}
-                    </p>
-                  </div>
-
-                  {/* 공지사항 */}
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      alert("준비 중");
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-[#191f28] hover:bg-[#f9fafb] flex items-center gap-2 active:bg-[#f2f4f6] transition-colors duration-96"
-                  >
-                    <span>📢</span> 공지사항
-                  </button>
-
-                  {/* 환경설정 */}
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      alert("준비 중");
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-[#191f28] hover:bg-[#f9fafb] flex items-center gap-2 active:bg-[#f2f4f6] transition-colors duration-96"
-                  >
-                    <span>⚙️</span> 환경설정
-                  </button>
-
-                  {/* 로그아웃 */}
-                  <button
-                    onClick={async () => {
-                      setMenuOpen(false);
-                      try {
-                        await signOut();
-                      } catch {
-                        // 무시
-                      }
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-[#f04452] hover:bg-[#fef2f2] flex items-center gap-2 active:bg-[#fde8e8] transition-colors duration-96 border-t border-[#f2f4f6] mt-1"
-                  >
-                    <span>🚪</span> 로그아웃
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <p className="text-sm text-[#6b7684] mt-2">
+        {/* 인사말 */}
+        <div className="px-5 pt-2 pb-4 border-b border-[#e5e8eb]">
+          <p className="text-sm text-[#6b7684]">
             {user.nickname || "익명"}님 안녕하세요 👋
           </p>
         </div>
@@ -396,32 +285,32 @@ export default function RootPage() {
               {/* 서비스 소개/감성 섹션 */}
               <div className="mt-8 space-y-3">
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">🎬</span>
+                  <span className="text-2xl shrink-0">🔍</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">3초 릴스</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">하루 3초, 우리 반 기록</p>
+                    <p className="text-sm font-bold text-[#191f28]">우리 반 찾기</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">학교, 학년, 반으로 그때 그 교실 찾기</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">⏳</span>
+                  <span className="text-2xl shrink-0">📨</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">N년 후 재회</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">시간이 지나면 다시 만나요</p>
+                    <p className="text-sm font-bold text-[#191f28]">친구 초대하기</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">링크 하나로 흩어진 친구들 다시 모으기</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">📱</span>
+                  <span className="text-2xl shrink-0">🗺️</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">그리드 공유</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">인스타로 반 전체 한 번에</p>
+                    <p className="text-sm font-bold text-[#191f28]">지금 우리 반</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">다들 어디서 뭐하고 지내는지</p>
                   </div>
                 </div>
               </div>
 
-               {/* 앱 슬로건 푸터 */}
-               <p className="mt-8 text-xs text-[#8b95a1] text-center">
-                 우리 반이 콘텐츠가 되는 곳 · 교실
-               </p>
+              {/* 앱 슬로건 푸터 */}
+              <p className="mt-8 text-xs text-[#8b95a1] text-center">
+                다시 만나는 우리 반 · 반클
+              </p>
             </>
           ) : (
             /* 케이스 B: 내 반 없음 */
@@ -434,7 +323,7 @@ export default function RootPage() {
                 우리 반, 지금 찾아보세요
               </h2>
               <p className="text-sm text-[#6b7684] mt-2 text-center">
-                3초 릴스로 반 친구들과 추억을 남기고
+                흩어진 반 친구들을 다시 모으고
                 <br />
                 우리만의 교실을 만들어보세요
               </p>
@@ -450,32 +339,32 @@ export default function RootPage() {
               {/* 서비스 소개/감성 섹션 */}
               <div className="mt-10 space-y-3 w-full">
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">🎬</span>
+                  <span className="text-2xl shrink-0">🔍</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">3초 릴스</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">하루 3초, 우리 반 기록</p>
+                    <p className="text-sm font-bold text-[#191f28]">우리 반 찾기</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">학교, 학년, 반으로 그때 그 교실 찾기</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">⏳</span>
+                  <span className="text-2xl shrink-0">📨</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">N년 후 재회</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">시간이 지나면 다시 만나요</p>
+                    <p className="text-sm font-bold text-[#191f28]">친구 초대하기</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">링크 하나로 흩어진 친구들 다시 모으기</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[#f9fafb] border border-[#f2f4f6]">
-                  <span className="text-2xl shrink-0">📱</span>
+                  <span className="text-2xl shrink-0">🗺️</span>
                   <div>
-                    <p className="text-sm font-bold text-[#191f28]">그리드 공유</p>
-                    <p className="text-xs text-[#6b7684] mt-0.5">인스타로 반 전체 한 번에</p>
+                    <p className="text-sm font-bold text-[#191f28]">지금 우리 반</p>
+                    <p className="text-xs text-[#6b7684] mt-0.5">다들 어디서 뭐하고 지내는지</p>
                   </div>
                 </div>
               </div>
 
-               {/* 앱 슬로건 푸터 */}
-               <p className="mt-8 text-xs text-[#8b95a1] text-center">
-                 우리 반이 콘텐츠가 되는 곳 · 교실
-               </p>
+              {/* 앱 슬로건 푸터 */}
+              <p className="mt-8 text-xs text-[#8b95a1] text-center">
+                다시 만나는 우리 반 · 반클
+              </p>
             </div>
           )}
         </div>

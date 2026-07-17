@@ -14,6 +14,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
+import Header from "@/app/components/Header";
 
 // TODO: [S4] 교실(방) 페이지
 // - 감정 배지 상호 확인 시에만 공개 로직
@@ -276,7 +277,7 @@ function RoomPageInner() {
 
   // ===== 로그인 가드: 로딩 / 미로그인 / 로그인됨 분기 =====
 
-  // 1. 아직 마운트 안 됐거나 auth 로딩 중
+  // 1. 아직 마운트 안 됐거나 auth 로딩 중 → Header 없음
   if (!mounted || loading) {
     return (
       <main className="min-h-screen bg-[#f9fafb] flex justify-center">
@@ -287,7 +288,7 @@ function RoomPageInner() {
     );
   }
 
-  // 2. 미로그인 → 로그인 유도 화면 (roomId 유지 → 로그인 후 자동 복귀)
+  // 2. 미로그인 → 로그인 유도 화면 (roomId 유지 → 로그인 후 자동 복귀) → Header 없음
   if (!user) {
     return (
       <main className="min-h-screen bg-[#f9fafb] flex justify-center">
@@ -322,20 +323,15 @@ function RoomPageInner() {
     );
   }
 
-  // 3. 로그인됨 → 기존 방 화면 전체
+  // 3. 로그인됨 → 방 화면 (Header 있음)
   return (
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
       <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col relative">
-        {/* 뒤로가기 */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 z-10 text-[#6b7684] text-sm"
-        >
-          ← 뒤로
-        </button>
+        {/* 공통 헤더 (sticky top-0 z-50, 뒤로가기 + 로고 + 프로필 메뉴 포함) */}
+        <Header />
 
-        {/* 헤더 */}
-        <div className="px-5 pt-12 pb-4 border-b border-[#e5e8eb]">
+        {/* 방 정보 헤더 (Header 아래) */}
+        <div className="px-5 pt-4 pb-4 border-b border-[#e5e8eb]">
           <h1 className="text-xl font-bold text-[#191f28]">3학년 5반</h1>
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useEffect, useState, useCallback } from "react";
 import type { SchoolResult } from "@/app/api/school/route";
+import Header from "@/app/components/Header";
 
 // TODO: [S2] 지도 페이지
 // - 카카오맵 + NEIS 학교 검색
@@ -239,8 +240,11 @@ export default function MapPage() {
   return (
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
       <div className="w-full max-w-[420px] h-dvh bg-white relative overflow-hidden">
-        {/* 상단 검색바 (지도 위 오버레이) */}
-        <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-4">
+        {/* 공통 헤더 (지도 위 오버레이, z-50) */}
+        <Header />
+
+        {/* 상단 검색바 (지도 위 오버레이, Header 아래) */}
+        <div className="absolute top-[56px] left-0 right-0 z-10 px-4 pt-4">
           <div className="relative">
             <div className="flex items-center gap-2 h-[52px] px-4 bg-white rounded-xl border border-[#e5e8eb] shadow-[0_2px_8px_rgba(25,31,40,0.08)]">
               <span className="text-[#8b95a1] text-base shrink-0">🔍</span>

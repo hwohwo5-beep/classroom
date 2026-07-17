@@ -17,6 +17,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
+import Header from "@/app/components/Header";
 
 // TODO: [S2] 릴스 페이지
 // - 3초 영상 녹화 (MediaRecorder API)
@@ -335,16 +336,11 @@ function ReelsPageInner() {
   return (
     <main className="min-h-screen bg-white flex justify-center">
       <div className="w-full max-w-[480px] min-h-screen bg-white flex flex-col relative">
-        {/* 뒤로가기 */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 z-10 text-[#6b7684] text-sm"
-        >
-          ← 뒤로
-        </button>
+        {/* 공통 헤더 (sticky top-0 z-50, 뒤로가기 + 로고 + 프로필 메뉴 포함) */}
+        <Header />
 
         {/* ── 타임슬롯 탭 ── */}
-        <div className="px-5 pt-12 pb-3 flex gap-2">
+        <div className="px-5 pt-4 pb-3 flex gap-2">
           {TIME_SLOTS.map((slot) => (
             <button
               key={slot}
@@ -482,7 +478,7 @@ function ReelsPageInner() {
 
         {/* ── 촬영 모달 ── */}
         {recordingMemberId !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70">
             <div className="relative w-full max-w-[360px] bg-[#191f28] rounded-2xl overflow-hidden shadow-2xl">
               {/* 카메라 프리뷰 */}
               <div className="relative aspect-[9/16] bg-black">
