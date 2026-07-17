@@ -40,7 +40,14 @@ interface AlbumPhoto {
   id: string;
   imageUrl: string;
   uploaderName: string;
+  tags: string[];
   createdAt: Timestamp | null;
+}
+
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+  tagInput: string;
 }
 
 const NAMES = [
@@ -113,6 +120,9 @@ function RoomPageInner() {
   const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<AlbumPhoto | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 복수 업로드: 선택된 파일들 (미리보기 + 태그 입력)
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
   // 초대 링크
   const [inviteUrl, setInviteUrl] = useState("");
@@ -187,6 +197,7 @@ function RoomPageInner() {
           id: doc.id,
           imageUrl: data.imageUrl ?? "",
           uploaderName: data.uploaderName ?? "익명",
+          tags: data.tags ?? [],
           createdAt: data.createdAt ?? null,
         });
       });
@@ -199,6 +210,13 @@ function RoomPageInner() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // cleanup pendingFiles preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      pendingFiles.forEach((pf) => URL.revokeObjectURL(pf.previewUrl));
+    };
+  }, [pendingFiles]);
 
   const onlineCount = seats.filter((s) => s.online).length;
 
@@ -243,35 +261,89 @@ function RoomPageInner() {
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
   };
 
-  // 사진 업로드
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  // ── 복수 사진 선택 → 미리보기 + 태그 입력 UI ──
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !user) return;
 
-    // 간단한 크기 제한 (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert("10MB 이하의 사진만 업로드 가능합니다.");
-      return;
+    const newPending: PendingFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      // 크기 제한 (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`${file.name}: 10MB 이하의 사진만 업로드 가능합니다.`);
+        continue;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      newPending.push({ file, previewUrl, tagInput: "" });
     }
 
-    setUploading(true);
-    try {
-      const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = ref(storage, `rooms/${roomId}/album/${fileName}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
+    if (newPending.length > 0) {
+      setPendingFiles((prev) => [...prev, ...newPending]);
+    }
 
-      await addDoc(collection(db, "album"), {
-        imageUrl: downloadUrl,
-        uploaderName: user.nickname || "익명",
-        createdAt: serverTimestamp(),
-      });
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("사진 업로드에 실패했습니다.");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    // input 초기화 (같은 파일 다시 선택 가능하게)
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── pendingFiles 태그 입력 업데이트 ──
+  const updateTagInput = (index: number, value: string) => {
+    setPendingFiles((prev) =>
+      prev.map((pf, i) => (i === index ? { ...pf, tagInput: value } : pf))
+    );
+  };
+
+  // ── pendingFiles에서 특정 파일 제거 ──
+  const removePendingFile = (index: number) => {
+    setPendingFiles((prev) => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // ── pendingFiles 전체 업로드 ──
+  const uploadPendingPhotos = async () => {
+    if (pendingFiles.length === 0 || !user) return;
+
+    setUploading(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const pf of pendingFiles) {
+      try {
+        const fileName = `${Date.now()}_${pf.file.name}`;
+        const storageRef = ref(storage, `rooms/${roomId}/album/${fileName}`);
+        const snapshot = await uploadBytes(storageRef, pf.file);
+        const downloadUrl = await getDownloadURL(snapshot.ref);
+
+        // 태그 파싱: 쉼표로 split, trim, 빈 문자열 제거
+        const tags = pf.tagInput
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0);
+
+        await addDoc(collection(db, "album"), {
+          imageUrl: downloadUrl,
+          uploaderName: user.nickname || "익명",
+          tags,
+          createdAt: serverTimestamp(),
+        });
+
+        successCount++;
+      } catch (err) {
+        console.error(`Upload failed for ${pf.file.name}:`, err);
+        failCount++;
+      }
+    }
+
+    // cleanup preview URLs
+    pendingFiles.forEach((pf) => URL.revokeObjectURL(pf.previewUrl));
+    setPendingFiles([]);
+    setUploading(false);
+
+    if (failCount > 0) {
+      alert(`${successCount}장 업로드 완료, ${failCount}장 실패했습니다.`);
     }
   };
 
@@ -431,6 +503,7 @@ function RoomPageInner() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -443,7 +516,60 @@ function RoomPageInner() {
             </button>
           </div>
 
-          {photos.length === 0 && !uploading && (
+          {/* ── pendingFiles: 업로드 전 미리보기 + 태그 입력 ── */}
+          {pendingFiles.length > 0 && (
+            <div className="mb-4 space-y-3">
+              <p className="text-xs font-medium text-[#6b7684]">
+                📋 업로드할 사진 ({pendingFiles.length}장)
+              </p>
+              {pendingFiles.map((pf, i) => (
+                <div
+                  key={i}
+                  className="flex gap-3 p-3 rounded-xl border border-[#e5e8eb] bg-[#f9fafb]"
+                >
+                  {/* 썸네일 */}
+                  <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#f2f4f6]">
+                    <img
+                      src={pf.previewUrl}
+                      alt={`사진 ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {/* 태그 입력 + 제거 버튼 */}
+                  <div className="flex-1 flex flex-col justify-center gap-1.5">
+                    <input
+                      value={pf.tagInput}
+                      onChange={(e) => updateTagInput(i, e.target.value)}
+                      placeholder="이 사진 속 친구 이름 (쉼표로 여러 명)"
+                      disabled={uploading}
+                      className="w-full h-8 px-2.5 rounded-[7px] bg-white text-xs text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all disabled:opacity-50"
+                    />
+                    <p className="text-[10px] text-[#8b95a1] truncate">
+                      {pf.file.name} ({(pf.file.size / 1024 / 1024).toFixed(1)}MB)
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => removePendingFile(i)}
+                    disabled={uploading}
+                    className="shrink-0 w-7 h-7 rounded-full bg-[#f2f4f6] text-[#8b95a1] text-xs flex items-center justify-center active:scale-[0.95] transition-transform disabled:opacity-50"
+                    title="제거"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {/* 업로드 실행 버튼 */}
+              <button
+                onClick={uploadPendingPhotos}
+                disabled={uploading}
+                className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+              >
+                {uploading ? "업로드 중..." : `${pendingFiles.length}장 업로드하기`}
+              </button>
+            </div>
+          )}
+
+          {photos.length === 0 && pendingFiles.length === 0 && !uploading && (
             <p className="text-[#8b95a1] text-xs text-center italic py-6">
               아직 앨범에 사진이 없어요. 첫 추억을 올려보세요!
             </p>
@@ -454,16 +580,24 @@ function RoomPageInner() {
               <button
                 key={photo.id}
                 onClick={() => setSelectedPhoto(photo)}
-                className="aspect-square rounded-xl overflow-hidden bg-[#f2f4f6] shadow-[0_1px_3px_rgba(25,31,40,0.04)] active:scale-[0.97] transition-transform"
+                className="aspect-square rounded-xl overflow-hidden bg-[#f2f4f6] shadow-[0_1px_3px_rgba(25,31,40,0.04)] active:scale-[0.97] transition-transform relative group"
               >
                 <img
                   src={photo.imageUrl}
                   alt={`${photo.uploaderName}님이 올린 사진`}
                   className="w-full h-full object-cover"
                 />
+                {/* 태그 오버레이 (tags가 있을 때만) */}
+                {photo.tags && photo.tags.length > 0 && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
+                    <p className="text-[9px] text-white/90 truncate leading-tight">
+                      🏷️ {photo.tags.join(", ")}
+                    </p>
+                  </div>
+                )}
               </button>
             ))}
-            {uploading && (
+            {uploading && pendingFiles.length === 0 && (
               <div className="aspect-square rounded-xl bg-[#f2f4f6] flex items-center justify-center text-[#8b95a1] text-xs">
                 업로드 중...
               </div>
@@ -620,6 +754,11 @@ function RoomPageInner() {
             <p className="text-white/70 text-xs text-center mt-2">
               {selectedPhoto.uploaderName}님이 올린 사진
             </p>
+            {selectedPhoto.tags && selectedPhoto.tags.length > 0 && (
+              <p className="text-white/50 text-[11px] text-center mt-0.5">
+                🏷️ {selectedPhoto.tags.join(", ")}
+              </p>
+            )}
             <button
               onClick={() => setSelectedPhoto(null)}
               className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-[#6b7684] text-sm font-bold"

@@ -438,6 +438,14 @@ function ReelsPageInner() {
                 })}
               </div>
             )}
+
+            {/* 📸 하루 카드 만들기 버튼 (TODO: canvas 로직 연동 예정) */}
+            <button
+              onClick={() => alert("하루 카드 만들기 - 준비 중")}
+              className="mt-5 w-full h-[52px] rounded-[7px] bg-gradient-to-r from-[#f04452] to-[#ff6b7a] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96 shadow-lg shadow-[#f04452]/20"
+            >
+              📸 하루 카드 만들기
+            </button>
           </div>
         ) : (
           /* ── RECORD 모드: 멤버 선택 → 녹화 ── */
