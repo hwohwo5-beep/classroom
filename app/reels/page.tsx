@@ -379,8 +379,18 @@ function ReelsPageInner() {
         {showRecordModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70">
             <div className="relative w-full max-w-[360px] bg-[#191f28] rounded-2xl overflow-hidden shadow-2xl">
+              {/* ── 감성 카피 (카메라 프리뷰 위) ── */}
+              <div className="px-5 pt-5 pb-3 text-center">
+                <p className="text-white font-bold text-lg leading-tight">
+                  지금 모습 그대로,
+                </p>
+                <p className="text-white/50 text-sm mt-0.5">
+                  3초만 보여주세요 😊
+                </p>
+              </div>
+
               {/* 카메라 프리뷰 */}
-              <div className="relative aspect-[9/16] bg-black">
+              <div className="relative aspect-[9/16] bg-black mx-4 rounded-xl overflow-hidden">
                 {cameraStream ? (
                   <video
                     ref={videoPreviewRef}
@@ -477,7 +487,7 @@ function ReelsPageInner() {
                         disabled={!cameraStream}
                         className="w-full h-12 rounded-[7px] bg-[#f04452] text-white font-medium text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
                       >
-                        녹화 시작 (3초)
+                        📸 3초 촬영 시작
                       </button>
                     ) : (
                       <p className="text-center text-white/70 text-sm">
