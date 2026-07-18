@@ -4,9 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import {
   collection,
-  addDoc,
   query,
-  where,
   orderBy,
   onSnapshot,
   serverTimestamp,
@@ -19,19 +17,12 @@ import { db, storage } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
 import Header from "@/app/components/Header";
 
-// TODO: [S2] 릴스 페이지
+// TODO: [S2] 릴스 페이지 → "3초 출석" 그리드
 // - 3초 영상 녹화 (MediaRecorder API)
-// - Firebase Storage 업로드 (rooms/{roomId}/reels/{timeSlot}/{uid}_{timestamp}.webm)
+// - Firebase Storage 업로드 (rooms/{roomId}/reels/{uid}_{timestamp}.webm)
 // - Firestore 메타데이터 저장 (rooms/{roomId}/reels 컬렉션)
 // - onSnapshot으로 저장된 영상 불러와 그리드 재생
-// - 같은 uid+timeSlot이면 덮어쓰기(재촬영)
-
-interface Member {
-  uid: string;
-  name: string;
-  emoji: string;
-  online: boolean;
-}
+// - 같은 uid면 덮어쓰기(재촬영)
 
 interface ReelDoc {
   id: string;
@@ -39,54 +30,9 @@ interface ReelDoc {
   timeSlot: string;
   videoUrl: string;
   memberId: string;
+  memberName?: string;
   createdAt: Timestamp | null;
 }
-
-const TIME_SLOTS = ["등교", "점심", "하교"] as const;
-type TimeSlot = (typeof TIME_SLOTS)[number];
-
-const MEMBERS: Member[] = [
-  { uid: "user1", name: "김민준", emoji: "😎", online: true },
-  { uid: "user2", name: "이서연", emoji: "🥰", online: true },
-  { uid: "user3", name: "박도윤", emoji: "🤓", online: false },
-  { uid: "user4", name: "최지우", emoji: "😴", online: true },
-  { uid: "user5", name: "정하은", emoji: "🙃", online: true },
-  { uid: "user6", name: "강시우", emoji: "🤩", online: false },
-  { uid: "user7", name: "윤아름", emoji: "🥳", online: true },
-  { uid: "user8", name: "임태양", emoji: "🤗", online: true },
-  { uid: "user9", name: "한지민", emoji: "😇", online: false },
-  { uid: "user10", name: "오세훈", emoji: "🤔", online: true },
-  { uid: "user11", name: "신세경", emoji: "😌", online: true },
-  { uid: "user12", name: "유재석", emoji: "😜", online: false },
-  { uid: "user13", name: "이광수", emoji: "🤪", online: true },
-  { uid: "user14", name: "전소민", emoji: "😈", online: true },
-  { uid: "user15", name: "송지효", emoji: "👻", online: false },
-  { uid: "user16", name: "김종국", emoji: "🎃", online: true },
-  { uid: "user17", name: "하하", emoji: "🤡", online: true },
-  { uid: "user18", name: "양세찬", emoji: "👽", online: false },
-  { uid: "user19", name: "조세호", emoji: "🤖", online: true },
-  { uid: "user20", name: "안은진", emoji: "🎅", online: true },
-  { uid: "user21", name: "박보검", emoji: "🐶", online: false },
-  { uid: "user22", name: "아이유", emoji: "🐱", online: true },
-  { uid: "user23", name: "차은우", emoji: "🐭", online: true },
-  { uid: "user24", name: "수지", emoji: "🐹", online: false },
-  { uid: "user25", name: "남주혁", emoji: "🐰", online: true },
-  { uid: "user26", name: "김태리", emoji: "🦊", online: true },
-  { uid: "user27", name: "변우석", emoji: "🐻", online: false },
-  { uid: "user28", name: "고윤정", emoji: "🐼", online: true },
-  { uid: "user29", name: "이도현", emoji: "🐨", online: true },
-  { uid: "user30", name: "로운", emoji: "🐯", online: false },
-  { uid: "user31", name: "김혜윤", emoji: "🦁", online: true },
-  { uid: "user32", name: "최현욱", emoji: "🐮", online: true },
-  { uid: "user33", name: "설인아", emoji: "🦄", online: false },
-  { uid: "user34", name: "김영광", emoji: "🐧", online: true },
-  { uid: "user35", name: "정채연", emoji: "🐸", online: true },
-  { uid: "user36", name: "이준기", emoji: "🐙", online: false },
-  { uid: "user37", name: "문채원", emoji: "🦋", online: true },
-  { uid: "user38", name: "서강준", emoji: "🐝", online: true },
-  { uid: "user39", name: "김세정", emoji: "🐞", online: false },
-  { uid: "user40", name: "박형식", emoji: "🦉", online: true },
-];
 
 function ReelsPageInner() {
   const router = useRouter();
@@ -95,11 +41,8 @@ function ReelsPageInner() {
   const { user, loading: authLoading } = useAuthContext();
 
   const [mounted, setMounted] = useState(false);
-  const [timeSlot, setTimeSlot] = useState<TimeSlot>("등교");
-  const [mode, setMode] = useState<"play" | "record">("play");
 
   // 녹화 상태
-  const [recordingMemberId, setRecordingMemberId] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
@@ -107,13 +50,14 @@ function ReelsPageInner() {
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedBlobUrl, setRecordedBlobUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showRecordModal, setShowRecordModal] = useState(false);
 
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Firestore에서 불러온 릴스 영상
+  // Firestore에서 불러온 출석 영상
   const [reelDocs, setReelDocs] = useState<ReelDoc[]>([]);
 
   // 로그인 안 됐으면 /login 으로 리다이렉트
@@ -127,16 +71,12 @@ function ReelsPageInner() {
     setMounted(true);
   }, []);
 
-  // Firestore 실시간 구독: 현재 roomId + timeSlot의 릴스 영상
+  // Firestore 실시간 구독: 현재 roomId의 모든 출석 영상
   useEffect(() => {
     if (!mounted) return;
 
     const reelsRef = collection(db, "rooms", roomId, "reels");
-    const q = query(
-      reelsRef,
-      where("timeSlot", "==", timeSlot),
-      orderBy("createdAt", "desc")
-    );
+    const q = query(reelsRef, orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs: ReelDoc[] = [];
       snapshot.forEach((docSnap) => {
@@ -147,13 +87,14 @@ function ReelsPageInner() {
           timeSlot: data.timeSlot ?? "",
           videoUrl: data.videoUrl ?? "",
           memberId: data.memberId ?? "",
+          memberName: data.memberName ?? "",
           createdAt: data.createdAt ?? null,
         });
       });
       setReelDocs(docs);
     });
     return unsubscribe;
-  }, [mounted, timeSlot, roomId]);
+  }, [mounted, roomId]);
 
   // cleanup blob URL on unmount
   useEffect(() => {
@@ -239,28 +180,26 @@ function ReelsPageInner() {
 
   // ── Firebase Storage 업로드 + Firestore 저장 ──
   const saveRecording = useCallback(async () => {
-    if (!recordedBlob || !user || !recordingMemberId) return;
+    if (!recordedBlob || !user) return;
 
     setUploading(true);
     try {
-      const member = MEMBERS.find((m) => m.uid === recordingMemberId);
-      const memberName = member?.name ?? "익명";
+      const memberName = user.nickname || "익명";
 
-      // Storage 경로: rooms/{roomId}/reels/{timeSlot}/{uid}_{timestamp}.webm
+      // Storage 경로: rooms/{roomId}/reels/{uid}_{timestamp}.webm
       const fileName = `${user.uid}_${Date.now()}.webm`;
-      const storageRef = ref(storage, `rooms/${roomId}/reels/${timeSlot}/${fileName}`);
+      const storageRef = ref(storage, `rooms/${roomId}/reels/${fileName}`);
       const snapshot = await uploadBytes(storageRef, recordedBlob);
       const downloadUrl = await getDownloadURL(snapshot.ref);
 
       // Firestore: rooms/{roomId}/reels 컬렉션
-      // 같은 uid+timeSlot이면 덮어쓰기 (setDoc with doc id = uid_timeSlot)
-      const docId = `${user.uid}_${timeSlot}`;
-      const docRef = doc(db, "rooms", roomId, "reels", docId);
+      // 같은 uid면 덮어쓰기 (setDoc with doc id = uid)
+      const docRef = doc(db, "rooms", roomId, "reels", user.uid);
       await setDoc(docRef, {
         uid: user.uid,
-        timeSlot,
+        timeSlot: "출석",
         videoUrl: downloadUrl,
-        memberId: recordingMemberId,
+        memberId: user.uid,
         memberName,
         createdAt: serverTimestamp(),
       });
@@ -271,7 +210,7 @@ function ReelsPageInner() {
         URL.revokeObjectURL(recordedBlobUrl);
         setRecordedBlobUrl(null);
       }
-      setRecordingMemberId(null);
+      setShowRecordModal(false);
       stopCamera();
     } catch (err) {
       console.error("Reels upload failed:", err);
@@ -279,7 +218,7 @@ function ReelsPageInner() {
     } finally {
       setUploading(false);
     }
-  }, [recordedBlob, user, recordingMemberId, timeSlot, recordedBlobUrl, stopCamera, roomId]);
+  }, [recordedBlob, user, recordedBlobUrl, stopCamera, roomId]);
 
   // ── 녹화 모달 닫기 ──
   const closeRecordModal = useCallback(() => {
@@ -293,41 +232,47 @@ function ReelsPageInner() {
       URL.revokeObjectURL(recordedBlobUrl);
       setRecordedBlobUrl(null);
     }
-    setRecordingMemberId(null);
+    setShowRecordModal(false);
     stopCamera();
   }, [recordedBlobUrl, stopCamera]);
 
-  // ── 멤버 클릭 → 녹화 모달 열기 ──
-  const handleMemberClick = useCallback(
-    (member: Member) => {
-      if (!member.online) return;
-      setRecordingMemberId(member.uid);
-      startCamera();
-    },
-    [startCamera]
-  );
+  // ── "나도 3초 출석" 클릭 → 녹화 모달 열기 ──
+  const handleAttendClick = useCallback(() => {
+    setShowRecordModal(true);
+    startCamera();
+  }, [startCamera]);
 
-  // ── 하루 카드 만들기 핸들러 ──
-  const handleCreateDayCard = () => {
-    alert("하루 카드 만들기 - 준비 중 (다음 단계에서 구현)");
+  // ── 친구 한 명 불러오기 ──
+  const handleInviteFriend = useCallback(() => {
+    const inviteUrl = `${window.location.origin}/room?roomId=${roomId}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(inviteUrl).then(() => {
+        alert("초대 링크가 복사되었습니다!");
+      }).catch(() => {
+        alert("준비 중");
+      });
+    } else {
+      alert("준비 중");
+    }
+  }, [roomId]);
+
+  // ── 출석 인원 계산 ──
+  const attendCount = reelDocs.length;
+
+  // ── 상단 카피 ──
+  const getHeaderCopy = () => {
+    if (attendCount < 3) return "우리 반이 다시 모이기 시작했습니다";
+    if (attendCount <= 4) return "우리 반이 다시 모이기 시작했습니다";
+    if (attendCount <= 9) return `졸업 후, ${attendCount}명의 현재`;
+    return `우리 반 3초 출석부 완성 · ${attendCount}명 출석 중`;
   };
 
-  // ── 그리드용: 멤버별 영상 매핑 ──
-  const memberVideoMap = new Map<string, string>();
-  reelDocs.forEach((doc) => {
-    if (doc.memberId && doc.videoUrl) {
-      // 같은 memberId가 여러 개면 가장 최근 것만 사용 (orderBy desc이므로 첫 매칭)
-      if (!memberVideoMap.has(doc.memberId)) {
-        memberVideoMap.set(doc.memberId, doc.videoUrl);
-      }
-    }
-  });
-
-  const recordedCount = reelDocs.length;
-
-  // 학교 정보 (TODO: 실제 데이터 연동)
-  const schoolInfo = "○○고등학교 · 2015년 입학";
-  const yearsAfter = new Date().getFullYear() - 2015;
+  // ── 그리드 열 수 ──
+  const getGridCols = () => {
+    if (attendCount <= 4) return "grid-cols-2";
+    if (attendCount <= 9) return "grid-cols-3";
+    return "grid-cols-4";
+  };
 
   // 로딩 중이거나 로그인 안 됐으면 빈 화면
   if (!mounted || authLoading || !user) {
@@ -344,153 +289,94 @@ function ReelsPageInner() {
         {/* 공통 헤더 (sticky top-0 z-50, 뒤로가기 + 로고 + 프로필 메뉴 포함) */}
         <Header />
 
-        {/* ── 타임슬롯 탭 ── */}
-        <div className="px-5 pt-4 pb-3 flex gap-2">
-          {TIME_SLOTS.map((slot) => (
-            <button
-              key={slot}
-              onClick={() => setTimeSlot(slot)}
-              className={`flex-1 h-10 rounded-[7px] text-sm font-medium transition-all active:scale-[0.98] ${
-                timeSlot === slot
-                  ? "bg-[#191f28] text-white"
-                  : "bg-[#f2f4f6] text-[#6b7684]"
-              }`}
-            >
-              {slot}
-            </button>
-          ))}
+        {/* ── 상단 카피 ── */}
+        <div className="px-5 pt-5 pb-4">
+          <h2 className="text-lg font-bold text-[#191f28]">{getHeaderCopy()}</h2>
         </div>
 
-        {/* ── 모드 전환 ── */}
-        <div className="px-5 pb-4 flex gap-2">
-          <button
-            onClick={() => setMode("play")}
-            className={`flex-1 h-9 rounded-[7px] text-sm font-medium transition-all active:scale-[0.98] ${
-              mode === "play"
-                ? "bg-[#3182f6] text-white"
-                : "bg-[#f2f4f6] text-[#6b7684]"
-            }`}
-          >
-            📺 보기
-          </button>
-          <button
-            onClick={() => setMode("record")}
-            className={`flex-1 h-9 rounded-[7px] text-sm font-medium transition-all active:scale-[0.98] ${
-              mode === "record"
-                ? "bg-[#3182f6] text-white"
-                : "bg-[#f2f4f6] text-[#6b7684]"
-            }`}
-          >
-            🎥 찍기
-          </button>
-        </div>
-
-        {/* ── 콘텐츠 영역 ── */}
-        {mode === "play" ? (
-          /* ── PLAY 모드: 저장된 영상 그리드 ── */
-          <div className="flex-1 px-5 pb-8">
-            {reelDocs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-[#8b95a1]">
-                <span className="text-4xl mb-3">🎬</span>
-                <p className="text-sm">아직 올라온 영상이 없어요.</p>
-                <p className="text-xs mt-1">&#34;찍기&#34; 모드에서 첫 릴스를 남겨보세요!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {MEMBERS.map((member) => {
-                  const videoUrl = memberVideoMap.get(member.uid);
-                  return (
-                    <div
-                      key={member.uid}
-                      className="relative aspect-[9/16] rounded-xl overflow-hidden bg-[#f2f4f6]"
-                    >
-                       {videoUrl ? (
-                         <video
-                           src={videoUrl}
-                           muted
-                           playsInline
-                           loop
-                           className="absolute inset-0 w-full h-full object-cover"
-                           onMouseEnter={(e) => {
-                             const v = e.target as HTMLVideoElement;
-                             const playPromise = v.play();
-                             if (playPromise !== undefined) {
-                               playPromise.catch(() => {
-                                 // Ignore errors (e.g., AbortError when interrupted by pause)
-                               });
-                             }
-                           }}
-                           onMouseLeave={(e) => {
-                             const v = e.target as HTMLVideoElement;
-                             v.pause();
-                             v.currentTime = 0;
-                           }}
-                         />
-                       ) : (
-                         <div className="absolute inset-0 flex flex-col items-center justify-center text-[#8b95a1]">
-                           <span className="text-2xl">{member.emoji}</span>
-                           <span className="text-[10px] mt-1">{member.name}</span>
-                         </div>
-                       )}
-                      {/* 멤버 이름 오버레이 */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
-                        <p className="text-[10px] font-medium text-white/90 truncate">
-                          {member.name}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* 📸 하루 카드 만들기 버튼 (TODO: canvas 로직 연동 예정) */}
-            <button
-              onClick={handleCreateDayCard}
-              className="mt-5 w-full h-[52px] rounded-[7px] bg-gradient-to-r from-[#f04452] to-[#ff6b7a] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96 shadow-lg shadow-[#f04452]/20"
-            >
-              📸 하루 카드 만들기
-            </button>
-          </div>
-        ) : (
-          /* ── RECORD 모드: 멤버 선택 → 녹화 ── */
-          <div className="flex-1 px-5 pb-8">
-            <p className="text-xs text-[#8b95a1] mb-3">
-              친구를 선택하고 3초 릴스를 찍어보세요! 📸
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {MEMBERS.map((member) => {
-                const hasVideo = memberVideoMap.has(member.uid);
-                return (
-                  <button
-                    key={member.uid}
-                    onClick={() => handleMemberClick(member)}
-                    disabled={!member.online}
-                    className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all active:scale-[0.95] ${
-                      member.online
-                        ? "bg-[#f2f4f6] hover:bg-[#e8f3ff]"
-                        : "bg-[#f9fafb] opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    <span className="text-2xl">{member.emoji}</span>
-                    <span className="text-[11px] font-medium text-[#191f28] mt-1">
-                      {member.name}
-                    </span>
-                    {!member.online && (
-                      <span className="text-[9px] text-[#8b95a1]">오프라인</span>
-                    )}
-                    {hasVideo && (
-                      <span className="absolute top-1 right-1 text-[10px]">✅</span>
-                    )}
-                  </button>
-                );
-              })}
+        {/* ── 출석 그리드 ── */}
+        <div className="flex-1 px-5 pb-4 overflow-y-auto">
+          {attendCount === 0 ? (
+            /* ── empty 상태: 안내 + 큼직한 촬영 버튼 ── */
+            <div className="flex flex-col items-center justify-center h-64 text-[#8b95a1]">
+              <span className="text-4xl mb-3">🎬</span>
+              <p className="text-sm">아직 출석한 친구가 없어요.</p>
+              <p className="text-xs mt-1 mb-6">첫 출석을 남겨보세요!</p>
+              <button
+                onClick={handleAttendClick}
+                className="h-[52px] px-8 rounded-[7px] bg-[#f04452] text-white font-medium text-base flex items-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-[#f04452]/20"
+              >
+                <span className="text-lg">📸</span>
+                나도 3초 출석하기
+              </button>
             </div>
-          </div>
-        )}
+          ) : (
+            /* ── 출석자 1명 이상: 그리드 + 끝에 ➕ 유도 칸 ── */
+            <div className={`grid ${getGridCols()} gap-2`}>
+              {reelDocs.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="relative aspect-square rounded-xl overflow-hidden bg-[#f2f4f6]"
+                >
+                  {doc.videoUrl ? (
+                    <video
+                      src={doc.videoUrl}
+                      muted
+                      playsInline
+                      loop
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onMouseEnter={(e) => {
+                        const v = e.target as HTMLVideoElement;
+                        const playPromise = v.play();
+                        if (playPromise !== undefined) {
+                          playPromise.catch(() => {
+                            // Ignore errors (e.g., AbortError when interrupted by pause)
+                          });
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        const v = e.target as HTMLVideoElement;
+                        v.pause();
+                        v.currentTime = 0;
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-[#8b95a1]">
+                      <span className="text-2xl">🎬</span>
+                    </div>
+                  )}
+                  {/* 이름 오버레이 */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
+                    <p className="text-[10px] font-medium text-white/90 truncate">
+                      {doc.memberName ?? "익명"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {/* ➕ 나도 3초 출석 유도 칸 */}
+              <button
+                onClick={handleAttendClick}
+                className="relative aspect-square rounded-xl border-2 border-dashed border-[#f04452] bg-[#fff5f5] flex flex-col items-center justify-center gap-1 active:scale-[0.95] transition-transform hover:bg-[#fff0f0]"
+              >
+                <span className="text-2xl text-[#f04452]">➕</span>
+                <span className="text-[11px] font-medium text-[#f04452]">나도 3초 출석</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── 하단 버튼: 친구 한 명 불러오기 ── */}
+        <div className="px-5 pb-8 pt-2">
+          <button
+            onClick={handleInviteFriend}
+            className="w-full h-[52px] rounded-[7px] bg-gradient-to-r from-[#f04452] to-[#ff6b7a] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96 shadow-lg shadow-[#f04452]/20"
+          >
+            👥 친구 한 명 불러오기
+          </button>
+        </div>
 
         {/* ── 촬영 모달 ── */}
-        {recordingMemberId !== null && (
+        {showRecordModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70">
             <div className="relative w-full max-w-[360px] bg-[#191f28] rounded-2xl overflow-hidden shadow-2xl">
               {/* 카메라 프리뷰 */}
