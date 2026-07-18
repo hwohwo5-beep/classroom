@@ -124,6 +124,9 @@ function RoomPageInner() {
   // 복수 업로드: 선택된 파일들 (미리보기 + 태그 입력)
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
+  // 그때 vs 지금 모달
+  const [showThenNowModal, setShowThenNowModal] = useState(false);
+
   // 초대 링크
   const [inviteUrl, setInviteUrl] = useState("");
   useEffect(() => {
@@ -346,6 +349,17 @@ function RoomPageInner() {
       alert(`${successCount}장 업로드 완료, ${failCount}장 실패했습니다.`);
     }
   };
+
+  // ── 그때 vs 지금: photos에서 모든 고유 태그 수집 ──
+  const thenVsNowTags: string[] = (() => {
+    const tagSet = new Set<string>();
+    photos.forEach((photo) => {
+      photo.tags.forEach((tag) => {
+        if (tag.trim().length > 0) tagSet.add(tag.trim());
+      });
+    });
+    return Array.from(tagSet).sort();
+  })();
 
   // ===== 로그인 가드: 로딩 / 미로그인 / 로그인됨 분기 =====
 
@@ -603,6 +617,20 @@ function RoomPageInner() {
               </div>
             )}
           </div>
+
+          {/* ── 🕰️ 그때 vs 지금 ── */}
+          <div className="mt-5 pt-4 border-t border-[#e5e8eb]">
+            <p className="text-xs font-semibold text-[#6b7684] mb-1.5">🕰️ 그때 vs 지금</p>
+            <p className="text-[11px] text-[#8b95a1] mb-3 leading-relaxed">
+              옛날 단체사진 속 나를 찾아서, 지금 내 3초 출석과 연결해보세요
+            </p>
+            <button
+              onClick={() => setShowThenNowModal(true)}
+              className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+            >
+              <span>🔍</span> 내 옛날 사진에서 나 찾기
+            </button>
+          </div>
         </div>
 
         {/* 자리표 */}
@@ -764,6 +792,45 @@ function RoomPageInner() {
               className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-[#6b7684] text-sm font-bold"
             >
               ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 그때 vs 지금: 이름 선택 모달 ── */}
+      {showThenNowModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="relative w-full max-w-[380px] mx-4 bg-white rounded-2xl shadow-2xl px-5 pt-5 pb-6">
+            <h2 className="text-base font-bold text-[#191f28] text-center mb-1">
+              옛날 사진 속 이름을 골라주세요
+            </h2>
+            <p className="text-[11px] text-[#8b95a1] text-center mb-4">
+              태그된 친구들 중에서 나를 찾아보세요
+            </p>
+
+            {thenVsNowTags.length === 0 ? (
+              <p className="text-sm text-[#8b95a1] text-center py-6">
+                아직 태그된 옛날 사진이 없어요
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto mb-4">
+                {thenVsNowTags.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => alert(`${name} 선택됨 - 연결 기능은 다음 단계`)}
+                    className="px-3 py-1.5 rounded-full bg-[#f2f4f6] text-[#191f28] text-sm font-medium active:scale-[0.95] transition-transform hover:bg-[#e8f3ff] hover:text-[#1b64da]"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowThenNowModal(false)}
+              className="w-full h-10 rounded-[7px] bg-[#f2f4f6] text-[#6b7684] text-sm font-medium active:scale-[0.98] transition-transform"
+            >
+              닫기
             </button>
           </div>
         </div>
