@@ -52,6 +52,15 @@ interface PendingFile {
   tagInput: string;
 }
 
+interface ReelDoc {
+  id: string;
+  uid: string;
+  videoUrl: string;
+  memberName: string;
+  timeSlot: string;
+  createdAt: Timestamp | null;
+}
+
 const NAMES = [
   "김민준", "이서연", "박도윤", "최지우", "정하은",
   "강시우", "윤아름", "임태양", "한지민", "오세훈",
@@ -135,6 +144,29 @@ function RoomPageInner() {
 
   // 그때 vs 지금: 현재 사용자가 이미 연결한 태그 이름들
   const [matchedNames, setMatchedNames] = useState<Set<string>>(new Set());
+
+  // 3초 출석(reels) 구독
+  const [reels, setReels] = useState<{id:string; uid:string; videoUrl:string; memberName:string}[]>([]);
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const reelsRef = collection(db, "rooms", roomId, "reels");
+    const q = query(reelsRef, orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs: {id:string; uid:string; videoUrl:string; memberName:string}[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        docs.push({
+          id: docSnap.id,
+          uid: data.uid ?? "",
+          videoUrl: data.videoUrl ?? "",
+          memberName: data.memberName ?? "",
+        });
+      });
+      setReels(docs);
+    });
+    return unsubscribe;
+  }, [user, roomId]);
 
   // 초대 링크
   const [inviteUrl, setInviteUrl] = useState("");
@@ -725,43 +757,67 @@ function RoomPageInner() {
           </div>
         </div>
 
-        {/* 자리표 */}
+        {/* 3초 출석 스토리 트레이 (자리표 대체) */}
         <div className="flex-1 px-5 py-3 overflow-y-auto">
-          <p className="text-xs font-semibold text-[#6b7684] mb-3">— 우리 반 자리표 —</p>
-          <div className="grid grid-cols-5 gap-2.5">
-            {seats.map((s, i) => (
+          {/* 섹션 제목 - /reels 스타일 */}
+          <div className="px-6 pb-4">
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-2">
+              ATTENDANCE
+            </p>
+            <h2 className="text-[28px] font-bold text-[#0A0A0A] leading-[1.15] tracking-tight">
+              우리 반이 모였어요
+            </h2>
+          </div>
+
+          {/* 가로 스크롤 트레이 */}
+          <div className="flex gap-4 overflow-x-auto pb-4 px-6 scrollbar-hide -mx-6">
+            {/* ➕ 나도 출석 버튼 (맨 앞) */}
+            <button
+              onClick={() => router.push(`/reels?roomId=${roomId}`)}
+              className="flex-shrink-0 flex flex-col items-center gap-2 w-[72px]"
+            >
+              <div className="relative w-[72px] h-[72px] rounded-full border-2 border-dashed border-[#f04452] bg-[#F7F7F7] flex items-center justify-center active:scale-[0.98] transition-transform">
+                <span className="text-[28px] text-[#f04452]">+</span>
+              </div>
+              <p className="text-[11px] text-[#8E8E8E] text-center truncate max-w-[72px]">
+                나도 출석
+              </p>
+            </button>
+
+            {/* 출석자 원형 썸네일들 */}
+            {reels.map((reel) => (
               <button
-                key={i}
-                onClick={() => handleSeatClick(i, s)}
-                className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-transform active:scale-95
-                  ${s.name
-                    ? "bg-white border border-[#e5e8eb] shadow-sm hover:shadow-md"
-                    : "bg-[#f9fafb] border border-dashed border-[#e5e8eb]"}`}
+                key={reel.id}
+                onClick={() => setPlayingUrl(reel.videoUrl)}
+                className="flex-shrink-0 flex flex-col items-center gap-2 w-[72px]"
               >
-                {s.name ? (
-                  <>
-                    {s.emotion && (
-                      <span className="absolute -top-1.5 -right-1.5 text-sm drop-shadow-sm">
-                        {emotionLabel[s.emotion]}
-                      </span>
-                    )}
-                    <div className="relative">
-                      <div className="w-9 h-9 rounded-full bg-[#f2f4f6] flex items-center justify-center text-base">
-                        {s.emoji}
-                      </div>
-                      {s.online && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#00c896] border-2 border-white rounded-full" />
-                      )}
+                <div className="relative w-[72px] h-[72px] rounded-full ring-2 ring-[#f04452] ring-offset-2 ring-offset-white overflow-hidden bg-[#F7F7F7]">
+                  {reel.videoUrl ? (
+                    <video
+                      src={reel.videoUrl}
+                      muted
+                      playsInline
+                      loop
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#8E8E8E]">
+                      <span className="text-2xl">🎬</span>
                     </div>
-                    <p className="text-[11px] text-[#191f28] mt-1 font-medium leading-tight truncate max-w-full px-0.5">
-                      {s.name}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-[9px] text-[#8b95a1]">빈 자리</p>
-                )}
+                  )}
+                </div>
+                <p className="text-[11px] text-[#0A0A0A] text-center truncate max-w-[72px] font-medium">
+                  {reel.memberName || "익명"}
+                </p>
               </button>
             ))}
+
+            {/* 출석자 0명일 때 안내 */}
+            {reels.length === 0 && (
+              <div className="flex-shrink-0 flex flex-col items-center gap-2 w-[72px] text-center text-[#8E8E8E]">
+                <p className="text-[11px]">아직 출석한 친구가 없어요</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -946,6 +1002,33 @@ function RoomPageInner() {
               className="w-full h-10 rounded-[7px] bg-[#f2f4f6] text-[#6b7684] text-sm font-medium active:scale-[0.98] transition-transform"
             >
               닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3초 출석 영상 재생 모달 */}
+      {playingUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setPlayingUrl(null)}
+        >
+          <div
+            className="relative max-w-full max-h-[80vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              src={playingUrl}
+              autoPlay
+              controls
+              playsInline
+              className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl"
+            />
+            <button
+              onClick={() => setPlayingUrl(null)}
+              className="absolute -top-10 right-0 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-[#6b7684] text-sm font-bold"
+            >
+              ✕
             </button>
           </div>
         </div>
