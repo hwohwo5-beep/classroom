@@ -593,127 +593,135 @@ function RoomPageInner() {
           </div>
         </div>
 
-        {/* 📸 우리 반 앨범 */}
+        {/* ── 📷 룸샷 컨테이너 (우리 반 앨범 + 그때 vs 지금) ── */}
         <div className="px-5 pt-4 pb-2">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-[#6b7684]">📸 우리 반 앨범</p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="h-8 px-3 rounded-[7px] bg-[#3182f6] text-white text-xs font-medium disabled:opacity-50 active:scale-[0.98] transition-transform"
-            >
-              {uploading ? "업로드 중..." : "사진 추가"}
-            </button>
-          </div>
+          <div className="border border-[#e5e8eb] rounded-xl bg-[#fbfbfb] px-4 py-4">
+            {/* 룸샷 컨테이너 제목 */}
+            <h2 className="text-base font-bold text-[#191f28] mb-3">📷 룸샷</h2>
 
-          {/* ── pendingFiles: 업로드 전 미리보기 + 태그 입력 ── */}
-          {pendingFiles.length > 0 && (
-            <div className="mb-4 space-y-3">
-              <p className="text-xs font-medium text-[#6b7684]">
-                📋 업로드할 사진 ({pendingFiles.length}장)
-              </p>
-              {pendingFiles.map((pf, i) => (
-                <div
-                  key={i}
-                  className="flex gap-3 p-3 rounded-xl border border-[#e5e8eb] bg-[#f9fafb]"
+            {/* ── (1) 우리 반 앨범 ── */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-[#6b7684]">📸 우리 반 앨범</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="h-8 px-3 rounded-[7px] bg-[#3182f6] text-white text-xs font-medium disabled:opacity-50 active:scale-[0.98] transition-transform"
                 >
-                  {/* 썸네일 */}
-                  <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#f2f4f6]">
-                    <img
-                      src={pf.previewUrl}
-                      alt={`사진 ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  {/* 태그 입력 + 제거 버튼 */}
-                  <div className="flex-1 flex flex-col justify-center gap-1.5">
-                    <input
-                      value={pf.tagInput}
-                      onChange={(e) => updateTagInput(i, e.target.value)}
-                      placeholder="이 사진 속 친구 이름 (쉼표로 여러 명)"
-                      disabled={uploading}
-                      className="w-full h-8 px-2.5 rounded-[7px] bg-white text-xs text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all disabled:opacity-50"
-                    />
-                    <p className="text-[10px] text-[#8b95a1] truncate">
-                      {pf.file.name} ({(pf.file.size / 1024 / 1024).toFixed(1)}MB)
-                    </p>
-                  </div>
+                  {uploading ? "업로드 중..." : "사진 추가"}
+                </button>
+              </div>
+
+              {/* ── pendingFiles: 업로드 전 미리보기 + 태그 입력 ── */}
+              {pendingFiles.length > 0 && (
+                <div className="mb-4 space-y-3">
+                  <p className="text-xs font-medium text-[#6b7684]">
+                    📋 업로드할 사진 ({pendingFiles.length}장)
+                  </p>
+                  {pendingFiles.map((pf, i) => (
+                    <div
+                      key={i}
+                      className="flex gap-3 p-3 rounded-xl border border-[#e5e8eb] bg-[#f9fafb]"
+                    >
+                      {/* 썸네일 */}
+                      <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-[#f2f4f6]">
+                        <img
+                          src={pf.previewUrl}
+                          alt={`사진 ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      {/* 태그 입력 + 제거 버튼 */}
+                      <div className="flex-1 flex flex-col justify-center gap-1.5">
+                        <input
+                          value={pf.tagInput}
+                          onChange={(e) => updateTagInput(i, e.target.value)}
+                          placeholder="이 사진 속 친구 이름 (쉼표로 여러 명)"
+                          disabled={uploading}
+                          className="w-full h-8 px-2.5 rounded-[7px] bg-white text-xs text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all disabled:opacity-50"
+                        />
+                        <p className="text-[10px] text-[#8b95a1] truncate">
+                          {pf.file.name} ({(pf.file.size / 1024 / 1024).toFixed(1)}MB)
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removePendingFile(i)}
+                        disabled={uploading}
+                        className="shrink-0 w-7 h-7 rounded-full bg-[#f2f4f6] text-[#8b95a1] text-xs flex items-center justify-center active:scale-[0.95] transition-transform disabled:opacity-50"
+                        title="제거"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {/* 업로드 실행 버튼 */}
                   <button
-                    onClick={() => removePendingFile(i)}
+                    onClick={uploadPendingPhotos}
                     disabled={uploading}
-                    className="shrink-0 w-7 h-7 rounded-full bg-[#f2f4f6] text-[#8b95a1] text-xs flex items-center justify-center active:scale-[0.95] transition-transform disabled:opacity-50"
-                    title="제거"
+                    className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
                   >
-                    ✕
+                    {uploading ? "업로드 중..." : `${pendingFiles.length}장 업로드하기`}
                   </button>
                 </div>
-              ))}
-              {/* 업로드 실행 버튼 */}
-              <button
-                onClick={uploadPendingPhotos}
-                disabled={uploading}
-                className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
-              >
-                {uploading ? "업로드 중..." : `${pendingFiles.length}장 업로드하기`}
-              </button>
-            </div>
-          )}
+              )}
 
-          {photos.length === 0 && pendingFiles.length === 0 && !uploading && (
-            <p className="text-[#8b95a1] text-xs text-center italic py-6">
-              아직 앨범에 사진이 없어요. 첫 추억을 올려보세요!
-            </p>
-          )}
+              {photos.length === 0 && pendingFiles.length === 0 && !uploading && (
+                <p className="text-[#8b95a1] text-xs text-center italic py-6">
+                  아직 앨범에 사진이 없어요. 첫 추억을 올려보세요!
+                </p>
+              )}
 
-          <div className="grid grid-cols-3 gap-2">
-            {photos.map((photo) => (
-              <button
-                key={photo.id}
-                onClick={() => setSelectedPhoto(photo)}
-                className="aspect-square rounded-xl overflow-hidden bg-[#f2f4f6] shadow-[0_1px_3px_rgba(25,31,40,0.04)] active:scale-[0.97] transition-transform relative group"
-              >
-                <img
-                  src={photo.imageUrl}
-                  alt={`${photo.uploaderName}님이 올린 사진`}
-                  className="w-full h-full object-cover"
-                />
-                {/* 태그 오버레이 (tags가 있을 때만) */}
-                {photo.tags && photo.tags.length > 0 && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
-                    <p className="text-[9px] text-white/90 truncate leading-tight">
-                      🏷️ {photo.tags.join(", ")}
-                    </p>
+              <div className="grid grid-cols-3 gap-2">
+                {photos.map((photo) => (
+                  <button
+                    key={photo.id}
+                    onClick={() => setSelectedPhoto(photo)}
+                    className="aspect-square rounded-xl overflow-hidden bg-[#f2f4f6] shadow-[0_1px_3px_rgba(25,31,40,0.04)] active:scale-[0.97] transition-transform relative group"
+                  >
+                    <img
+                      src={photo.imageUrl}
+                      alt={`${photo.uploaderName}님이 올린 사진`}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* 태그 오버레이 (tags가 있을 때만) */}
+                    {photo.tags && photo.tags.length > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
+                        <p className="text-[9px] text-white/90 truncate leading-tight">
+                          🏷️ {photo.tags.join(", ")}
+                        </p>
+                      </div>
+                    )}
+                  </button>
+                ))}
+                {uploading && pendingFiles.length === 0 && (
+                  <div className="aspect-square rounded-xl bg-[#f2f4f6] flex items-center justify-center text-[#8b95a1] text-xs">
+                    업로드 중...
                   </div>
                 )}
-              </button>
-            ))}
-            {uploading && pendingFiles.length === 0 && (
-              <div className="aspect-square rounded-xl bg-[#f2f4f6] flex items-center justify-center text-[#8b95a1] text-xs">
-                업로드 중...
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* ── 🕰️ 그때 vs 지금 ── */}
-          <div className="mt-5 pt-4 border-t border-[#e5e8eb]">
-            <p className="text-xs font-semibold text-[#6b7684] mb-1.5">🕰️ 그때 vs 지금</p>
-            <p className="text-[11px] text-[#8b95a1] mb-3 leading-relaxed">
-              옛날 단체사진 속 나를 찾아서, 지금 내 3초 출석과 연결해보세요
-            </p>
-            <button
-              onClick={() => setShowThenNowModal(true)}
-              className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
-            >
-              <span>🔍</span> 내 옛날 사진에서 나 찾기
-            </button>
+            {/* ── (2) 🕰️ 그때 vs 지금 ── */}
+            <div className="mt-5 pt-4 border-t border-[#e5e8eb]">
+              <p className="text-xs font-semibold text-[#6b7684] mb-1.5">🕰️ 그때 vs 지금</p>
+              <p className="text-[11px] text-[#8b95a1] mb-3 leading-relaxed">
+                옛날 단체사진 속 나를 찾아서, 지금 내 3초 출석과 연결해보세요
+              </p>
+              <button
+                onClick={() => setShowThenNowModal(true)}
+                className="w-full h-10 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform flex items-center justify-center gap-1.5"
+              >
+                <span>🔍</span> 내 옛날 사진에서 나 찾기
+              </button>
+            </div>
           </div>
         </div>
 
@@ -785,12 +793,6 @@ function RoomPageInner() {
             className="w-full h-12 rounded-lg bg-[#f2f4f6] text-[#191f28] font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
           >
             📸 룸샷 - 우리 반이 기억하는 나
-          </button>
-          <button
-            onClick={() => router.push("/create")}
-            className="w-full h-12 rounded-lg bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
-          >
-            🎬 함께 콘텐츠 만들기
           </button>
         </div>
       </div>

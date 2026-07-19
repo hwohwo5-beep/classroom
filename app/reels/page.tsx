@@ -277,7 +277,7 @@ function ReelsPageInner() {
   // 로딩 중이거나 로그인 안 됐으면 빈 화면
   if (!mounted || authLoading || !user) {
     return (
-      <main className="min-h-screen bg-[#f9fafb] flex justify-center">
+      <main className="min-h-screen bg-white flex justify-center">
         <div className="w-full max-w-[480px] min-h-screen bg-white flex flex-col relative" />
       </main>
     );
@@ -289,34 +289,39 @@ function ReelsPageInner() {
         {/* 공통 헤더 (sticky top-0 z-50, 뒤로가기 + 로고 + 프로필 메뉴 포함) */}
         <Header />
 
-        {/* ── 상단 카피 ── */}
-        <div className="px-5 pt-5 pb-4">
-          <h2 className="text-lg font-bold text-[#191f28]">{getHeaderCopy()}</h2>
+        {/* ── [1][2] 제목 영역: 감도 극대화 — 큰 건 미친듯이 크게, 작은 건 확실히 작게 ── */}
+        <div className="px-6 pt-14 pb-12 text-center">
+          <p className="text-[11px] font-medium font-mono text-[#8E8E8E] tracking-[0.2em] uppercase mb-4">
+            3초 출석
+          </p>
+          <h2 className="text-[36px] font-bold text-[#0A0A0A] leading-[1.15] tracking-tight">
+            {getHeaderCopy()}
+          </h2>
         </div>
 
-        {/* ── 출석 그리드 ── */}
-        <div className="flex-1 px-5 pb-4 overflow-y-auto">
+        {/* ── [4] 출석 그리드: 중앙 정렬, 넉넉한 여백 ── */}
+        <div className="flex-1 px-6 pb-6 mt-10 overflow-y-auto">
           {attendCount === 0 ? (
-            /* ── empty 상태: 안내 + 큼직한 촬영 버튼 ── */
-            <div className="flex flex-col items-center justify-center h-64 text-[#8b95a1]">
-              <span className="text-4xl mb-3">🎬</span>
-              <p className="text-sm">아직 출석한 친구가 없어요.</p>
-              <p className="text-xs mt-1 mb-6">첫 출석을 남겨보세요!</p>
+            /* ── empty 상태: 화면 중앙 정렬 ── */
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+              <span className="text-6xl mb-5">🎬</span>
+              <p className="text-lg font-semibold text-[#0A0A0A] mb-1">아직 출석한 친구가 없어요</p>
+              <p className="text-sm text-[#8E8E8E] mb-10">첫 출석을 남겨보세요!</p>
               <button
                 onClick={handleAttendClick}
-                className="h-[52px] px-8 rounded-[7px] bg-[#f04452] text-white font-medium text-base flex items-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-[#f04452]/20"
+                className="h-[56px] px-12 rounded-full bg-[#f04452] text-white font-semibold text-base flex items-center gap-2.5 active:scale-[0.98] transition-transform"
               >
-                <span className="text-lg">📸</span>
+                <span className="text-xl">📸</span>
                 나도 3초 출석하기
               </button>
             </div>
           ) : (
             /* ── 출석자 1명 이상: 그리드 + 끝에 ➕ 유도 칸 ── */
-            <div className={`grid ${getGridCols()} gap-2`}>
+            <div className={`grid ${getGridCols()} gap-4 place-items-center`}>
               {reelDocs.map((doc) => (
                 <div
                   key={doc.id}
-                  className="relative aspect-square rounded-xl overflow-hidden bg-[#f2f4f6]"
+                  className="relative aspect-square w-full rounded-2xl overflow-hidden bg-[#F7F7F7] border border-[#E3E3E3]"
                 >
                   {doc.videoUrl ? (
                     <video
@@ -341,13 +346,13 @@ function ReelsPageInner() {
                       }}
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-[#8b95a1]">
+                    <div className="absolute inset-0 flex items-center justify-center text-[#8E8E8E]">
                       <span className="text-2xl">🎬</span>
                     </div>
                   )}
-                  {/* 이름 오버레이 */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
-                    <p className="text-[10px] font-medium text-white/90 truncate">
+                  {/* 이름 오버레이: 하단 그라데이션 + 흰 글씨 */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent px-3 py-2.5">
+                    <p className="text-[12px] font-semibold text-white truncate">
                       {doc.memberName ?? "익명"}
                     </p>
                   </div>
@@ -356,20 +361,20 @@ function ReelsPageInner() {
               {/* ➕ 나도 3초 출석 유도 칸 */}
               <button
                 onClick={handleAttendClick}
-                className="relative aspect-square rounded-xl border-2 border-dashed border-[#f04452] bg-[#fff5f5] flex flex-col items-center justify-center gap-1 active:scale-[0.95] transition-transform hover:bg-[#fff0f0]"
+                className="relative aspect-square w-full rounded-2xl border-2 border-dashed border-[#f04452] bg-[#F7F7F7] flex flex-col items-center justify-center gap-2 active:scale-[0.95] transition-transform hover:bg-[#f0f0f0]"
               >
-                <span className="text-2xl text-[#f04452]">➕</span>
-                <span className="text-[11px] font-medium text-[#f04452]">나도 3초 출석</span>
+                <span className="text-[28px] text-[#f04452]">➕</span>
+                <span className="text-[12px] font-semibold text-[#f04452]">나도 3초 출석</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* ── 하단 버튼: 친구 한 명 불러오기 ── */}
-        <div className="px-5 pb-8 pt-2">
+        {/* ── [6] 하단 CTA: rounded-full pill, 코랄 절제 ── */}
+        <div className="px-6 pb-10 pt-4">
           <button
             onClick={handleInviteFriend}
-            className="w-full h-[52px] rounded-[7px] bg-gradient-to-r from-[#f04452] to-[#ff6b7a] text-white font-medium text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform duration-96 shadow-lg shadow-[#f04452]/20"
+            className="w-full py-4 rounded-full bg-[#f04452] text-white font-semibold text-base flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             👥 친구 한 명 불러오기
           </button>
@@ -377,20 +382,20 @@ function ReelsPageInner() {
 
         {/* ── 촬영 모달 ── */}
         {showRecordModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70">
-            <div className="relative w-full max-w-[360px] bg-[#191f28] rounded-2xl overflow-hidden shadow-2xl">
-              {/* ── 감성 카피 (카메라 프리뷰 위) ── */}
-              <div className="px-5 pt-5 pb-3 text-center">
-                <p className="text-white font-bold text-lg leading-tight">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
+            <div className="relative w-full max-w-[360px] bg-white rounded-2xl overflow-hidden shadow-2xl">
+              {/* ── 카피 (카메라 프리뷰 위) ── */}
+              <div className="px-6 pt-6 pb-4 text-center">
+                <p className="text-[#0A0A0A] font-bold text-xl leading-tight">
                   지금 모습 그대로,
                 </p>
-                <p className="text-white/50 text-sm mt-0.5">
+                <p className="text-[#8E8E8E] text-sm mt-1">
                   3초만 보여주세요 😊
                 </p>
               </div>
 
               {/* 카메라 프리뷰 */}
-              <div className="relative aspect-[9/16] bg-black mx-4 rounded-xl overflow-hidden">
+              <div className="relative aspect-[9/16] bg-black mx-5 rounded-xl overflow-hidden">
                 {cameraStream ? (
                   <video
                     ref={videoPreviewRef}
@@ -405,7 +410,7 @@ function ReelsPageInner() {
                     <p className="text-sm text-white/70 text-center px-4">{cameraError}</p>
                     <button
                       onClick={startCamera}
-                      className="mt-4 h-11 px-6 rounded-[7px] bg-[#3182f6] text-white text-sm font-medium active:scale-[0.98] transition-transform"
+                      className="mt-4 h-11 px-6 rounded-xl bg-[#f04452] text-white text-sm font-semibold active:scale-[0.98] transition-transform"
                     >
                       다시 시도
                     </button>
@@ -446,7 +451,7 @@ function ReelsPageInner() {
               </div>
 
               {/* 컨트롤 */}
-              <div className="p-4 space-y-3">
+              <div className="p-5 space-y-3">
                 {recordedBlobUrl ? (
                   <>
                     {/* 녹화 완료: 미리보기 + 저장 */}
@@ -461,7 +466,8 @@ function ReelsPageInner() {
                       <button
                         onClick={saveRecording}
                         disabled={uploading}
-                        className="flex-1 h-11 rounded-[7px] bg-[#3182f6] text-white text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+                        className="flex-1 h-12 rounded-xl text-white text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
+                        style={{ background: "linear-gradient(135deg, #f04452, #ff7a3d)" }}
                       >
                         {uploading ? "업로드 중..." : "저장"}
                       </button>
@@ -473,7 +479,7 @@ function ReelsPageInner() {
                           startRecording();
                         }}
                         disabled={uploading}
-                        className="flex-1 h-11 rounded-[7px] bg-[#f2f4f6] text-[#6b7684] text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+                        className="flex-1 h-12 rounded-xl bg-[#F7F7F7] text-[#8E8E8E] text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
                       >
                         다시 찍기
                       </button>
@@ -485,12 +491,12 @@ function ReelsPageInner() {
                       <button
                         onClick={startRecording}
                         disabled={!cameraStream}
-                        className="w-full h-12 rounded-[7px] bg-[#f04452] text-white font-medium text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
+                        className="w-full h-12 rounded-xl bg-[#f04452] text-white font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
                       >
                         📸 3초 촬영 시작
                       </button>
                     ) : (
-                      <p className="text-center text-white/70 text-sm">
+                      <p className="text-center text-[#8E8E8E] text-sm">
                         녹화 중... {countdown}초 남음
                       </p>
                     )}
@@ -500,7 +506,7 @@ function ReelsPageInner() {
                 <button
                   onClick={closeRecordModal}
                   disabled={uploading}
-                  className="w-full h-11 rounded-[7px] bg-[#f2f4f6] text-[#6b7684] text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+                  className="w-full h-11 rounded-xl bg-[#F7F7F7] text-[#8E8E8E] text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
                 >
                   취소
                 </button>
@@ -516,7 +522,7 @@ function ReelsPageInner() {
 export default function ReelsPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-[#f9fafb] flex justify-center">
+      <main className="min-h-screen bg-white flex justify-center">
         <div className="w-full max-w-[480px] min-h-screen bg-white flex flex-col relative" />
       </main>
     }>
