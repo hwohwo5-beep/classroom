@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import {
   collection,
   addDoc,
+  setDoc,
+  doc,
   query,
   orderBy,
   onSnapshot,
@@ -127,6 +129,13 @@ function RoomPageInner() {
   // 그때 vs 지금 모달
   const [showThenNowModal, setShowThenNowModal] = useState(false);
 
+  // 그때 vs 지금: 직접 추가한 이름
+  const [extraNames, setExtraNames] = useState<string[]>([]);
+  const [nameInput, setNameInput] = useState("");
+
+  // 그때 vs 지금: 현재 사용자가 이미 연결한 태그 이름들
+  const [matchedNames, setMatchedNames] = useState<Set<string>>(new Set());
+
   // 초대 링크
   const [inviteUrl, setInviteUrl] = useState("");
   useEffect(() => {
@@ -208,6 +217,27 @@ function RoomPageInner() {
     });
     return unsubscribe;
   }, [user]);
+
+  // Firestore 실시간 구독 (matches) - 현재 사용자가 연결한 태그 이름들
+  useEffect(() => {
+    if (!user) return;
+    const matchesRef = collection(db, "matches");
+    const q = query(matchesRef, orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const names = new Set<string>();
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        // 현재 roomId + 현재 uid인 것만 수집
+        if (data.roomId === roomId && data.uid === user.uid) {
+          if (data.tagName && typeof data.tagName === "string") {
+            names.add(data.tagName.trim());
+          }
+        }
+      });
+      setMatchedNames(names);
+    });
+    return unsubscribe;
+  }, [user, roomId]);
 
   // 새 메시지 추가 시 스크롤
   useEffect(() => {
@@ -350,16 +380,70 @@ function RoomPageInner() {
     }
   };
 
-  // ── 그때 vs 지금: photos에서 모든 고유 태그 수집 ──
-  const thenVsNowTags: string[] = (() => {
-    const tagSet = new Set<string>();
+  // ── 그때 vs 지금: photos 태그 + 직접 추가한 이름 합치기 (중복 제거) ──
+  const allNames: string[] = (() => {
+    const nameSet = new Set<string>();
     photos.forEach((photo) => {
       photo.tags.forEach((tag) => {
-        if (tag.trim().length > 0) tagSet.add(tag.trim());
+        if (tag.trim().length > 0) nameSet.add(tag.trim());
       });
     });
-    return Array.from(tagSet).sort();
+    extraNames.forEach((name) => {
+      if (name.trim().length > 0) nameSet.add(name.trim());
+    });
+    return Array.from(nameSet).sort();
   })();
+
+  // ── 그때 vs 지금: 이름 직접 추가 ──
+  const handleAddName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    if (allNames.includes(trimmed)) {
+      alert("이미 목록에 있어요");
+      return;
+    }
+    setExtraNames((prev) => [...prev, trimmed]);
+    setNameInput("");
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddName();
+    }
+  };
+
+  // ── 그때 vs 지금: 이름 칩 클릭 (통일 핸들러) ──
+  const handleSelectName = async (name: string) => {
+    if (!user) return;
+
+    // 이미 연결된 이름이면 막기
+    if (matchedNames.has(name)) {
+      alert("이미 연결하셨어요");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `정말 당신이 '${name}'인가요? 옛날 사진 속 나로 연결됩니다.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const docId = `${roomId}_${user.uid}`;
+      await setDoc(doc(collection(db, "matches"), docId), {
+        tagName: name,
+        uid: user.uid,
+        nickname: user.nickname,
+        roomId: roomId,
+        createdAt: serverTimestamp(),
+      });
+      alert("연결 완료! 그때 vs 지금에서 확인할 수 있어요");
+      setShowThenNowModal(false);
+    } catch (err) {
+      console.error("Failed to save match:", err);
+      alert("연결에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
 
   // ===== 로그인 가드: 로딩 / 미로그인 / 로그인됨 분기 =====
 
@@ -808,23 +892,52 @@ function RoomPageInner() {
               태그된 친구들 중에서 나를 찾아보세요
             </p>
 
-            {thenVsNowTags.length === 0 ? (
+            {allNames.length === 0 ? (
               <p className="text-sm text-[#8b95a1] text-center py-6">
                 아직 태그된 옛날 사진이 없어요
               </p>
             ) : (
               <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto mb-4">
-                {thenVsNowTags.map((name) => (
-                  <button
-                    key={name}
-                    onClick={() => alert(`${name} 선택됨 - 연결 기능은 다음 단계`)}
-                    className="px-3 py-1.5 rounded-full bg-[#f2f4f6] text-[#191f28] text-sm font-medium active:scale-[0.95] transition-transform hover:bg-[#e8f3ff] hover:text-[#1b64da]"
-                  >
-                    {name}
-                  </button>
-                ))}
+                {allNames.map((name) => {
+                  const isMatched = matchedNames.has(name);
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => handleSelectName(name)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium active:scale-[0.95] transition-transform ${
+                        isMatched
+                          ? "bg-[#e8f3ff] text-[#1b64da] cursor-default"
+                          : "bg-[#f2f4f6] text-[#191f28] hover:bg-[#e8f3ff] hover:text-[#1b64da]"
+                      }`}
+                    >
+                      {name}
+                      {isMatched && (
+                        <span className="ml-1 text-[10px] text-[#00c896] font-semibold">
+                          ✅ 연결됨
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
+
+            {/* ── 직접 이름 추가 ── */}
+            <div className="flex gap-2 mb-4">
+              <input
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={handleNameKeyDown}
+                placeholder="목록에 없으면 이름 직접 입력"
+                className="flex-1 h-9 px-3 rounded-[7px] bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#f04452] transition-all"
+              />
+              <button
+                onClick={handleAddName}
+                className="h-9 px-4 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform shrink-0"
+              >
+                추가
+              </button>
+            </div>
 
             <button
               onClick={() => setShowThenNowModal(false)}

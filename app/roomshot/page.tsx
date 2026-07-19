@@ -76,6 +76,31 @@ export default function RoomShotPage() {
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 직접 추가한 이름
+  const [extraNames, setExtraNames] = useState<string[]>([]);
+  const [nameInput, setNameInput] = useState("");
+
+  // NAMES + extraNames 합치기 (중복 제거)
+  const allNames = Array.from(new Set([...NAMES, ...extraNames]));
+
+  const handleAddName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    if (allNames.includes(trimmed)) {
+      alert("이미 목록에 있어요");
+      return;
+    }
+    setExtraNames((prev) => [...prev, trimmed]);
+    setNameInput("");
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddName();
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -318,7 +343,7 @@ export default function RoomShotPage() {
                     이 사진 속 주인공을 선택해주세요
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {NAMES.map((name) => (
+                    {allNames.map((name) => (
                       <button
                         key={name}
                         onClick={() => setSelectedTarget(name)}
@@ -331,6 +356,23 @@ export default function RoomShotPage() {
                         {name}
                       </button>
                     ))}
+                  </div>
+
+                  {/* 직접 이름 추가 */}
+                  <div className="flex gap-2 mt-3">
+                    <input
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={handleNameKeyDown}
+                      placeholder="목록에 없으면 이름 직접 입력"
+                      className="flex-1 h-9 px-3 rounded-[7px] bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#f04452] transition-all"
+                    />
+                    <button
+                      onClick={handleAddName}
+                      className="h-9 px-4 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform shrink-0"
+                    >
+                      + 추가
+                    </button>
                   </div>
                 </div>
 
