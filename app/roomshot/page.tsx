@@ -247,39 +247,40 @@ export default function RoomShotPage() {
     <main className="min-h-screen bg-[#f9fafb] flex justify-center">
       <div className="w-full max-w-[420px] min-h-screen bg-white flex flex-col">
         {/* 헤더 */}
-        <div className="px-5 pt-4 pb-3 flex items-center gap-3 border-b border-[#e5e8eb]">
-          <button onClick={() => router.back()} className="text-[#6b7684] text-sm">
+        <div className="px-5 pt-4 pb-3 border-b border-[#e5e8eb]">
+          <button onClick={() => router.back()} className="text-[#6b7684] text-sm mb-3 inline-block">
             ← 뒤로
           </button>
-          <h1 className="text-lg font-bold text-[#191f28]">📸 룸샷</h1>
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">ROOMSHOT</p>
+          <h1 className="text-[24px] font-bold tracking-tight text-[#0A0A0A]">📸 룸샷</h1>
         </div>
 
         {!hasAnyShots && !showUpload ? (
           /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center px-8">
-            <span className="text-5xl mb-4">🕐</span>
-            <h2 className="text-lg font-bold text-[#191f28] text-center">
+            <span className="text-5xl mb-6">🕐</span>
+            <h2 className="text-[22px] font-bold text-[#0A0A0A] text-center">
               아직 우리 반 사진이 없어요
             </h2>
-            <p className="text-sm text-[#6b7684] text-center mt-2 leading-relaxed">
+            <p className="text-[14px] text-[#8E8E8E] text-center mt-2 leading-relaxed">
               내가 몰랐던 내 사진을
               <br />
               친구들이 가지고 있을지도 몰라요
             </p>
-            <p className="text-xs text-[#8b95a1] text-center mt-6 mb-8 leading-relaxed">
+            <p className="text-[14px] text-[#8E8E8E] text-center mt-6 mb-8 leading-relaxed">
               친구들이 가지고 있는 옛날 사진을
               <br />
               내 이름에 모아보세요
             </p>
             <button
               onClick={() => setShowUpload(true)}
-              className="w-full h-14 rounded-[7px] bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform duration-96"
+              className="w-full py-4 rounded-full bg-[#f04452] text-white font-semibold text-base active:scale-[0.98] transition-transform"
             >
               내 사진 모으기
             </button>
             <button
               onClick={() => setShowUpload(true)}
-              className="w-full h-12 rounded-[7px] text-[#6b7684] font-medium text-sm mt-2 active:scale-[0.98] transition-transform"
+              className="w-full h-12 rounded-[7px] text-[#8E8E8E] font-medium text-sm mt-2 active:scale-[0.98] transition-transform"
             >
               우리 반 사진 올리기
             </button>
@@ -287,7 +288,7 @@ export default function RoomShotPage() {
         ) : showUpload ? (
           /* 사진 올리기 플로우 */
           <div className="flex-1 flex flex-col px-5 pt-4 pb-6">
-            <h2 className="text-lg font-bold text-[#191f28] mb-4">📸 사진 올리기</h2>
+            <h2 className="text-[22px] font-bold text-[#0A0A0A] mb-4">📸 사진 올리기</h2>
 
             {uploadSuccess ? (
               <div className="flex-1 flex flex-col items-center justify-center">
@@ -298,7 +299,7 @@ export default function RoomShotPage() {
                     setUploadSuccess(null);
                     setShowUpload(false);
                   }}
-                  className="mt-6 h-11 px-6 rounded-[7px] bg-[#3182f6] text-white text-sm font-medium active:scale-[0.98] transition-transform"
+                  className="mt-6 h-11 px-6 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform"
                 >
                   확인
                 </button>
@@ -307,7 +308,8 @@ export default function RoomShotPage() {
               <>
                 {/* a) 사진 선택 */}
                 <div className="mb-5">
-                  <p className="text-sm font-semibold text-[#191f28] mb-2">사진 선택</p>
+                  <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">SELECT</p>
+                  <p className="text-[16px] font-semibold text-[#0A0A0A] mb-2">사진 선택</p>
                   <label
                     className={`block w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${
                       uploadPreview
@@ -339,7 +341,8 @@ export default function RoomShotPage() {
 
                 {/* b) 주인공 선택 */}
                 <div className="mb-5">
-                  <p className="text-sm font-semibold text-[#191f28] mb-2">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">SELECT</p>
+                  <p className="text-[16px] font-semibold text-[#0A0A0A] mb-2">
                     이 사진 속 주인공을 선택해주세요
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -347,10 +350,10 @@ export default function RoomShotPage() {
                       <button
                         key={name}
                         onClick={() => setSelectedTarget(name)}
-                        className={`px-3 h-9 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
                           selectedTarget === name
-                            ? "bg-[#3182f6] text-white"
-                            : "bg-[#f2f4f6] text-[#333d4b]"
+                            ? "bg-[#f04452] text-white"
+                            : "bg-[#F7F7F7] text-[#0A0A0A] border border-[#E3E3E3]"
                         }`}
                       >
                         {name}
@@ -369,7 +372,7 @@ export default function RoomShotPage() {
                     />
                     <button
                       onClick={handleAddName}
-                      className="h-9 px-4 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform shrink-0"
+                      className="h-9 px-4 rounded-[7px] border border-[#f04452] text-[#f04452] text-sm font-medium active:scale-[0.98] transition-transform shrink-0"
                     >
                       + 추가
                     </button>
@@ -377,20 +380,21 @@ export default function RoomShotPage() {
                 </div>
 
                 {/* c) "이때 뭐였지?" */}
-                <div className="mb-5">
-                  <p className="text-sm font-semibold text-[#191f28] mb-2">이때 뭐였지?</p>
+                <div className="mt-8">
+                  <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">MEMORY</p>
+                  <p className="text-[16px] font-semibold text-[#0A0A0A] mb-2">이때 뭐였지?</p>
                   <input
                     value={memoryText}
                     onChange={(e) => setMemoryText(e.target.value)}
                     placeholder="한 줄 기억을 남겨주세요..."
-                    className="w-full h-11 px-4 rounded-[7px] bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all"
+                    className="w-full h-11 px-4 rounded-[7px] bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] outline-none focus:ring-2 focus:ring-[#f04452] transition-all"
                   />
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {MEMORY_SUGGESTIONS.map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => setMemoryText(suggestion)}
-                        className="px-2.5 h-7 rounded-full bg-[#e8f3ff] text-[#1b64da] text-[11px] font-medium active:scale-[0.98] transition-transform"
+                        className="px-2.5 h-7 rounded-full bg-[#fff0f0] text-[#f04452] text-[11px] font-medium active:scale-[0.98] transition-transform"
                       >
                         {suggestion}
                       </button>
@@ -399,11 +403,11 @@ export default function RoomShotPage() {
                 </div>
 
                 {/* d) 보내기 */}
-                <div className="mt-auto space-y-3">
+                <div className="mt-8 space-y-3">
                   <button
                     onClick={handleUpload}
                     disabled={uploading || !uploadFile || !selectedTarget}
-                    className="w-full h-14 rounded-[7px] bg-[#3182f6] text-white font-medium text-base disabled:opacity-40 active:scale-[0.98] transition-transform duration-96"
+                    className="w-full h-14 rounded-[7px] bg-[#f04452] text-white font-medium text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
                   >
                     {uploading ? "업로드 중..." : "사진 보내기"}
                   </button>
@@ -432,7 +436,7 @@ export default function RoomShotPage() {
                 onClick={() => setTab("mine")}
                 className={`flex-1 h-11 text-sm font-medium transition-colors ${
                   tab === "mine"
-                    ? "text-[#3182f6] border-b-2 border-[#3182f6]"
+                    ? "text-[#f04452] border-b-2 border-[#f04452]"
                     : "text-[#6b7684]"
                 }`}
               >
@@ -442,7 +446,7 @@ export default function RoomShotPage() {
                 onClick={() => setTab("uploaded")}
                 className={`flex-1 h-11 text-sm font-medium transition-colors ${
                   tab === "uploaded"
-                    ? "text-[#3182f6] border-b-2 border-[#3182f6]"
+                    ? "text-[#f04452] border-b-2 border-[#f04452]"
                     : "text-[#6b7684]"
                 }`}
               >
@@ -463,7 +467,7 @@ export default function RoomShotPage() {
                         {pendingShots.map((shot) => (
                           <div
                             key={shot.id}
-                            className="rounded-xl bg-[#e8f3ff] border border-[#c8d9f0] p-4"
+                            className="rounded-xl bg-[#fff0f0] border border-[#f5c6cb] p-4"
                           >
                             <div className="flex gap-3">
                               <img
@@ -485,7 +489,7 @@ export default function RoomShotPage() {
                             <div className="flex gap-2 mt-3">
                               <button
                                 onClick={() => handleApprove(shot.id)}
-                                className="flex-1 h-9 rounded-[7px] bg-[#3182f6] text-white text-xs font-medium active:scale-[0.98] transition-transform"
+                                className="flex-1 h-9 rounded-[7px] bg-[#f04452] text-white text-xs font-medium active:scale-[0.98] transition-transform"
                               >
                                 공개하기
                               </button>
@@ -506,7 +510,7 @@ export default function RoomShotPage() {
                   {approvedShots.length === 0 && pendingShots.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <span className="text-3xl mb-3">🕐</span>
-                      <p className="text-sm text-[#6b7684] text-center">
+                      <p className="text-[14px] text-[#8E8E8E] text-center">
                         아직 사진이 없어요.
                         <br />
                         친구들이 가진 사진을 받아보세요
@@ -529,7 +533,7 @@ export default function RoomShotPage() {
                               className="w-full aspect-square object-cover"
                             />
                             <div className="p-3">
-                              <p className="text-[11px] font-semibold text-[#3182f6]">
+                              <p className="text-[11px] font-semibold text-[#f04452]">
                                 📸 친구가 찾아준 사진
                               </p>
                               <p className="text-[11px] text-[#6b7684] mt-1 line-clamp-2">
@@ -551,14 +555,14 @@ export default function RoomShotPage() {
                   {myUploads.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <span className="text-3xl mb-3">📷</span>
-                      <p className="text-sm text-[#6b7684] text-center">
+                      <p className="text-[14px] text-[#8E8E8E] text-center">
                         아직 올린 사진이 없어요.
                         <br />
                         친구의 옛날 사진을 찾아주세요
                       </p>
                       <button
                         onClick={() => setShowUpload(true)}
-                        className="mt-4 h-11 px-6 rounded-[7px] bg-[#3182f6] text-white text-sm font-medium active:scale-[0.98] transition-transform"
+                        className="mt-4 h-11 px-6 rounded-[7px] bg-[#f04452] text-white text-sm font-medium active:scale-[0.98] transition-transform"
                       >
                         사진 올리기
                       </button>
@@ -587,7 +591,7 @@ export default function RoomShotPage() {
                                 shot.status === "approved"
                                   ? "text-[#00c896]"
                                   : shot.status === "pending"
-                                    ? "text-[#1b64da]"
+                                    ? "text-[#f04452]"
                                     : "text-[#8b95a1]"
                               }`}
                             >
@@ -610,7 +614,7 @@ export default function RoomShotPage() {
             <div className="px-5 pb-6 pt-2">
               <button
                 onClick={() => setShowUpload(true)}
-                className="w-full h-12 rounded-[7px] bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform duration-96"
+                className="w-full h-12 rounded-[7px] bg-[#f04452] text-white font-medium text-base active:scale-[0.98] transition-transform"
               >
                 📸 사진 올리기
               </button>
