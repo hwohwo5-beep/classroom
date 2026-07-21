@@ -513,7 +513,7 @@ function RoomPageInner() {
                 alert("로그인에 실패했어요. 다시 시도해 주세요.");
               }
             }}
-            className="w-full max-w-[280px] h-12 rounded-lg bg-[#3182f6] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
+            className="w-full max-w-[280px] h-12 rounded-lg bg-[#f04452] text-white font-medium text-base active:scale-[0.98] transition-transform shadow-sm"
           >
             구글로 시작하기
           </button>
@@ -536,7 +536,7 @@ function RoomPageInner() {
         <div className="px-5 pt-4 pb-4 border-b border-[#e5e8eb]">
           <h1 className="text-xl font-bold text-[#191f28]">3학년 5반</h1>
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
-          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff0f0] text-[#f04452] text-xs font-medium">
             <span>🟢 40석 중 {onlineCount}명 착석</span>
           </div>
 
@@ -564,7 +564,7 @@ function RoomPageInner() {
                       }).catch(() => {});
                     }
                   }}
-                  className="h-8 px-3 rounded-[7px] bg-[#3182f6] text-white text-[11px] font-medium active:scale-[0.98] transition-transform shrink-0"
+                  className="h-8 px-3 rounded-[7px] bg-[#f04452] text-white text-[11px] font-medium active:scale-[0.98] transition-transform shrink-0"
                 >
                   복사
                 </button>
@@ -590,7 +590,7 @@ function RoomPageInner() {
                   key={msg.id}
                   className="text-sm leading-snug"
                   style={{
-                    color: msg.author === user?.nickname || msg.author === "나" ? "#3182f6" : "#191f28",
+                    color: msg.author === user?.nickname || msg.author === "나" ? "#f04452" : "#191f28",
                   }}
                 >
                   <span className="font-semibold">{msg.author}</span>
@@ -612,12 +612,12 @@ function RoomPageInner() {
                 onKeyDown={handleChalkKeyDown}
                 placeholder="✏️ 한마디 남기기..."
                 disabled={sending}
-                className="flex-1 h-9 px-3 rounded-lg bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all disabled:opacity-50"
+                className="flex-1 h-9 px-3 rounded-lg bg-[#f2f4f6] text-sm text-[#191f28] placeholder-[#8b95a1] outline-none focus:ring-2 focus:ring-[#f04452] transition-all disabled:opacity-50"
               />
               <button
                 onClick={sendChalkMessage}
                 disabled={!chalkInput.trim() || sending}
-                className="h-9 px-4 rounded-lg bg-[#3182f6] text-white text-sm font-medium disabled:opacity-40 active:scale-[0.98] transition-transform"
+                className="h-9 px-4 rounded-lg bg-[#f04452] text-white text-sm font-medium disabled:opacity-40 active:scale-[0.98] transition-transform"
               >
                 {sending ? "..." : "전송"}
               </button>
@@ -646,7 +646,7 @@ function RoomPageInner() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="h-8 px-3 rounded-[7px] bg-[#3182f6] text-white text-xs font-medium disabled:opacity-50 active:scale-[0.98] transition-transform"
+                  className="h-8 px-3 rounded-[7px] bg-[#f04452] text-white text-xs font-medium disabled:opacity-50 active:scale-[0.98] transition-transform"
                 >
                   {uploading ? "업로드 중..." : "사진 추가"}
                 </button>
@@ -678,7 +678,7 @@ function RoomPageInner() {
                           onChange={(e) => updateTagInput(i, e.target.value)}
                           placeholder="이 사진 속 친구 이름 (쉼표로 여러 명)"
                           disabled={uploading}
-                          className="w-full h-8 px-2.5 rounded-[7px] bg-white text-xs text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#3182f6] transition-all disabled:opacity-50"
+                          className="w-full h-8 px-2.5 rounded-[7px] bg-white text-xs text-[#191f28] placeholder-[#8b95a1] border border-[#e5e8eb] outline-none focus:ring-2 focus:ring-[#f04452] transition-all disabled:opacity-50"
                         />
                         <p className="text-[10px] text-[#8b95a1] truncate">
                           {pf.file.name} ({(pf.file.size / 1024 / 1024).toFixed(1)}MB)
@@ -826,15 +826,15 @@ function RoomPageInner() {
           {!showEmotionPicker ? (
             <button
               onClick={() => setShowEmotionPicker(true)}
-              className="w-full h-11 rounded-lg bg-[#e8f3ff] text-[#1b64da] font-medium text-sm active:scale-[0.98] transition-transform"
+              className="w-full h-11 rounded-lg bg-[#fff0f0] text-[#f04452] font-medium text-sm active:scale-[0.98] transition-transform"
             >
               💭 내 감정 표현하기
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={() => setMyEmotion("heart")} className="flex-1 h-11 rounded-lg bg-[#e8f3ff] text-lg active:scale-[0.98] transition-transform">❤️</button>
-              <button onClick={() => setMyEmotion("meet")} className="flex-1 h-11 rounded-lg bg-[#e8f3ff] text-lg active:scale-[0.98] transition-transform">🙋</button>
-              <button onClick={() => setMyEmotion("notalk")} className="flex-1 h-11 rounded-lg bg-[#e8f3ff] text-lg active:scale-[0.98] transition-transform">🙅</button>
+              <button onClick={() => setMyEmotion("heart")} className="flex-1 h-11 rounded-lg bg-[#fff0f0] text-lg active:scale-[0.98] transition-transform">❤️</button>
+              <button onClick={() => setMyEmotion("meet")} className="flex-1 h-11 rounded-lg bg-[#fff0f0] text-lg active:scale-[0.98] transition-transform">🙋</button>
+              <button onClick={() => setMyEmotion("notalk")} className="flex-1 h-11 rounded-lg bg-[#fff0f0] text-lg active:scale-[0.98] transition-transform">🙅</button>
               <button onClick={() => setMyEmotion(null)} className="flex-1 h-11 rounded-lg bg-[#f2f4f6] text-[#8b95a1] text-sm active:scale-[0.98] transition-transform">지우기</button>
             </div>
           )}
@@ -868,7 +868,7 @@ function RoomPageInner() {
                 {selectedSeat.seat.online ? "🟢 등교 중" : "⚪ 하교"}
               </p>
               {selectedSeat.seat.emotion && (
-                <span className="mt-2 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-sm font-medium">
+                <span className="mt-2 px-3 py-1 rounded-full bg-[#fff0f0] text-[#f04452] text-sm font-medium">
                   {emotionLabel[selectedSeat.seat.emotion]} {emotionName[selectedSeat.seat.emotion]}
                 </span>
               )}
@@ -876,7 +876,7 @@ function RoomPageInner() {
             <div className="mt-6 space-y-2.5">
               <button
                 onClick={() => alert(`💬 ${selectedSeat.seat.name}님에게 DM 보내기 (실제 DM 기능은 다음 작업)`)}
-                className="w-full h-11 rounded-lg bg-[#3182f6] text-white font-medium text-sm active:scale-[0.98] transition-transform"
+                className="w-full h-11 rounded-lg bg-[#f04452] text-white font-medium text-sm active:scale-[0.98] transition-transform"
               >
                 💬 DM 보내기
               </button>
@@ -964,8 +964,8 @@ function RoomPageInner() {
                       onClick={() => handleSelectName(name)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium active:scale-[0.95] transition-transform ${
                         isMatched
-                          ? "bg-[#e8f3ff] text-[#1b64da] cursor-default"
-                          : "bg-[#f2f4f6] text-[#191f28] hover:bg-[#e8f3ff] hover:text-[#1b64da]"
+                          ? "bg-[#fff0f0] text-[#f04452] cursor-default"
+                          : "bg-[#f2f4f6] text-[#191f28] hover:bg-[#fff0f0] hover:text-[#f04452]"
                       }`}
                     >
                       {name}

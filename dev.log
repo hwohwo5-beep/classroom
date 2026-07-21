@@ -8,3 +8,12 @@
 - Environments: .env.local
 ✓ Ready in 749ms
 
+ GET /room?roomId=test 200 in 997ms (next.js: 435ms, application-code: 562ms)
+ GET /room?roomId=test 200 in 94ms (next.js: 12ms, application-code: 82ms)
+ GET / 200 in 142ms (next.js: 59ms, application-code: 83ms)
+ GET /reels?roomId=7531618_2025_1_3 200 in 380ms (next.js: 195ms, application-code: 185ms)
+ GET /room?roomId=7531618_2025_1_3 200 in 344ms (next.js: 180ms, application-code: 165ms)
+ GET / 200 in 157ms (next.js: 25ms, application-code: 133ms)
+ GET /select 200 in 618ms (next.js: 374ms, application-code: 244ms)
+ GET /room?roomId=7531618_2025_1_3 200 in 301ms (next.js: 110ms, application-code: 191ms)
+[?25h
