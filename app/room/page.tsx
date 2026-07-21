@@ -772,7 +772,7 @@ function RoomPageInner() {
           </div>
 
           {/* 가로 스크롤 트레이 */}
-          <div className="flex gap-4 overflow-x-auto pb-4 px-6 scrollbar-hide -mx-6">
+          <div className="flex gap-4 overflow-x-auto py-3 pb-4 px-6 scrollbar-hide -mx-6">
             {/* ➕ 나도 출석 버튼 (맨 앞) */}
             <button
               onClick={() => router.push(`/reels?roomId=${roomId}`)}
@@ -793,14 +793,14 @@ function RoomPageInner() {
                 onClick={() => setPlayingUrl(reel.videoUrl)}
                 className="flex-shrink-0 flex flex-col items-center gap-2 w-[72px]"
               >
-                <div className="relative w-[72px] h-[72px] rounded-full ring-2 ring-[#f04452] ring-offset-2 ring-offset-white overflow-hidden bg-[#F7F7F7]">
+                <div className="relative w-[72px] h-[72px] rounded-full border-2 border-[#f04452] overflow-hidden bg-[#F7F7F7]">
                   {reel.videoUrl ? (
                     <video
                       src={reel.videoUrl}
                       muted
                       playsInline
                       loop
-                        className="w-full h-full object-cover object-[center_25%] rounded-full"
+                        className="w-full h-full object-cover object-center rounded-full"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[#8E8E8E]">
