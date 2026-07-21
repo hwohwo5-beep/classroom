@@ -534,7 +534,7 @@ function RoomPageInner() {
 
         {/* 방 정보 헤더 (Header 아래) */}
         <div className="px-5 pt-4 pb-4 border-b border-[#e5e8eb]">
-          <h1 className="text-xl font-bold text-[#191f28]">3학년 5반</h1>
+          <h1 className="text-[28px] font-bold tracking-tight text-[#0A0A0A]">3학년 5반</h1>
           <p className="text-sm text-[#6b7684] mt-0.5">○○고 · 2015년</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fff0f0] text-[#f04452] text-xs font-medium">
             <span>🟢 40석 중 {onlineCount}명 착석</span>
@@ -576,7 +576,8 @@ function RoomPageInner() {
         {/* 방명록 (구 칠판) */}
         <div className="px-5 pt-4 pb-2">
           <div className="border border-[#e5e8eb] rounded-xl px-4 py-3.5 bg-white">
-            <p className="text-xs font-semibold text-[#6b7684] mb-2">📝 우리 반 한마디</p>
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">GUESTBOOK</p>
+            <h2 className="text-[24px] font-bold tracking-tight text-[#0A0A0A] mb-3">📝 우리 반 한마디</h2>
 
             {/* 메시지 영역 */}
             <div className="max-h-[120px] overflow-y-auto space-y-1.5 text-left">
@@ -629,12 +630,13 @@ function RoomPageInner() {
         <div className="px-5 pt-4 pb-2">
           <div className="border border-[#e5e8eb] rounded-xl bg-[#fbfbfb] px-4 py-4">
             {/* 룸샷 컨테이너 제목 */}
-            <h2 className="text-base font-bold text-[#191f28] mb-3">📷 룸샷</h2>
+            <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">ROOMSHOT</p>
+            <h2 className="text-[24px] font-bold tracking-tight text-[#0A0A0A] mb-4">📷 룸샷</h2>
 
             {/* ── (1) 우리 반 앨범 ── */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-semibold text-[#6b7684]">📸 우리 반 앨범</p>
+                <p className="text-[16px] font-semibold text-[#0A0A0A]">📸 우리 반 앨범</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -743,7 +745,7 @@ function RoomPageInner() {
 
             {/* ── (2) 🕰️ 그때 vs 지금 ── */}
             <div className="mt-5 pt-4 border-t border-[#e5e8eb]">
-              <p className="text-xs font-semibold text-[#6b7684] mb-1.5">🕰️ 그때 vs 지금</p>
+              <p className="text-[16px] font-semibold text-[#0A0A0A] mb-1.5">🕰️ 그때 vs 지금</p>
               <p className="text-[11px] text-[#8b95a1] mb-3 leading-relaxed">
                 옛날 단체사진 속 나를 찾아서, 지금 내 3초 출석과 연결해보세요
               </p>
@@ -798,7 +800,7 @@ function RoomPageInner() {
                       muted
                       playsInline
                       loop
-                      className="w-full h-full object-cover rounded-full"
+                        className="w-full h-full object-cover object-[center_25%] rounded-full"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[#8E8E8E]">
