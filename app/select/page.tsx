@@ -145,7 +145,8 @@ function SelectPageInner() {
         </button>
 
         {/* 학교 검색 */}
-        <p className="text-xs text-[#8b95a1]">학교 찾기</p>
+        <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">SCHOOL</p>
+        <p className="text-[16px] font-semibold text-[#0A0A0A] mb-2">학교 찾기</p>
         <div className="relative mt-1">
           <input
             ref={inputRef}
@@ -156,7 +157,7 @@ function SelectPageInner() {
               if (searchResults.length > 0) setShowDropdown(true);
             }}
             placeholder="학교 이름을 입력하세요 (예: 서울고등학교)"
-            className="w-full h-12 px-4 rounded-xl border border-[#e5e8eb] bg-[#f9fafb] text-[#191f28] text-base placeholder-[#8b95a1] outline-none focus:ring-2 focus:ring-[#3182f6] focus:border-transparent transition-all"
+            className="w-full h-12 px-4 rounded-2xl border border-[#E3E3E3] bg-[#F7F7F7] text-[#191f28] text-base placeholder-[#8E8E8E] outline-none focus:ring-2 focus:ring-[#f04452] focus:border-transparent transition-all"
           />
           {searching && (
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8b95a1] text-sm">
@@ -186,21 +187,22 @@ function SelectPageInner() {
 
         {/* 선택된 학교 배지 */}
         {selectedSchool && (
-          <span className="inline-block w-fit mt-2 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#1b64da] text-xs font-medium">
+          <span className="inline-block w-fit mt-2 px-3 py-1 rounded-full bg-[#fff0f0] text-[#f04452] text-xs font-medium">
             🕰️ 선택된 학교: {selectedSchool.schoolName}
           </span>
         )}
 
         {/* 입학 연도 (드롭다운) */}
         <div className="mt-8">
-          <p className="text-sm font-semibold text-[#191f28] mb-3">입학 연도</p>
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">YEAR</p>
+          <p className="text-[16px] font-semibold text-[#0A0A0A] mb-3">입학 연도</p>
           <select
             value={selectedYear ?? ""}
             onChange={(e) => {
               const val = e.target.value;
               setSelectedYear(val ? Number(val) : null);
             }}
-            className="w-full h-12 px-4 rounded-xl border border-[#e5e8eb] bg-[#f2f4f6] text-[#191f28] text-sm font-medium outline-none focus:ring-2 focus:ring-[#3182f6] focus:border-transparent transition-all appearance-none cursor-pointer"
+            className="w-full h-12 px-4 rounded-2xl border border-[#E3E3E3] bg-[#F7F7F7] text-[#191f28] text-sm font-medium outline-none focus:ring-2 focus:ring-[#f04452] focus:border-transparent transition-all appearance-none cursor-pointer"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
               backgroundRepeat: "no-repeat",
@@ -220,17 +222,18 @@ function SelectPageInner() {
         </div>
 
         {/* 학년 */}
-        <div className="mt-6">
-          <p className="text-sm font-semibold text-[#191f28] mb-3">학년</p>
+        <div className="mt-8">
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">GRADE</p>
+          <p className="text-[16px] font-semibold text-[#0A0A0A] mb-3">학년</p>
           <div className="flex gap-2">
             {grades.map((g) => (
               <button
                 key={g}
                 onClick={() => setSelectedGrade(g)}
-                className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
+                className={`flex-1 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.98] ${
                   selectedGrade === g
-                    ? "bg-[#3182f6] text-white"
-                    : "bg-[#f2f4f6] text-[#333d4b]"
+                    ? "bg-[#f04452] text-white"
+                    : "bg-[#F7F7F7] text-[#0A0A0A] border border-[#E3E3E3]"
                 }`}
               >
                 {g}학년
@@ -240,17 +243,18 @@ function SelectPageInner() {
         </div>
 
         {/* 반 */}
-        <div className="mt-6">
-          <p className="text-sm font-semibold text-[#191f28] mb-3">반</p>
+        <div className="mt-8">
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8E8E8E] mb-1">CLASS</p>
+          <p className="text-[16px] font-semibold text-[#0A0A0A] mb-3">반</p>
           <div className="grid grid-cols-5 gap-2">
             {classes.map((c) => (
               <button
                 key={c}
                 onClick={() => setSelectedClass(c)}
-                className={`h-11 rounded-xl text-sm font-medium transition-all active:scale-[0.98] ${
+                className={`py-3 rounded-full text-sm font-medium transition-all active:scale-[0.98] ${
                   selectedClass === c
-                    ? "bg-[#3182f6] text-white"
-                    : "bg-[#f2f4f6] text-[#333d4b]"
+                    ? "bg-[#f04452] text-white"
+                    : "bg-[#F7F7F7] text-[#0A0A0A] border border-[#E3E3E3]"
                 }`}
               >
                 {c}반
@@ -300,10 +304,10 @@ function SelectPageInner() {
             }
           }}
           disabled={!canEnter || saving}
-          className={`w-full h-14 rounded-[7px] font-medium text-base mt-auto transition-all active:scale-[0.98] duration-96 ${
+          className={`w-full py-4 rounded-full font-semibold text-base mt-auto transition-all active:scale-[0.98] ${
             canEnter && !saving
-              ? "bg-[#3182f6] text-white"
-              : "bg-[#f2f4f6] text-[#8b95a1] cursor-not-allowed"
+              ? "bg-[#f04452] text-white"
+              : "bg-[#F7F7F7] text-[#8E8E8E] cursor-not-allowed"
           }`}
         >
           {saving ? "저장 중..." : "우리 반 들어가기"}
